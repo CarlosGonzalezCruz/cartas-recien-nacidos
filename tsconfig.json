@@ -3,6 +3,7 @@
         "target": "es2022",
         "module": "es2022",
         "outDir": "out",
+        "rootDir": "src",
         "sourceMap": true,
         "noImplicitAny": true,
         "strictNullChecks": true,
