@@ -14,8 +14,8 @@ APP.get('/', (request, result) => {
     result.sendFile(path.resolve(WEB_INDEX));
 });
 
-APP.get('/test-content', (request, result) => {
-    result.send("Este texto ha sido enviado desde el servidor");
+APP.get('/test-content', async (request, result) => {
+    result.send(await selectAllData(nacimientos));
 });
 
 APP.use(express.static("web"));
@@ -39,7 +39,7 @@ function openDatabase() :Promise<sqlite3.Database> {
 }
 
 
-function select_all_data(db :sqlite3.Database) {
+function selectAllData(db :sqlite3.Database) {
     return new Promise((resolve, reject) => {
         db.all("SELECT * FROM Nacimientos", (err, rows) => {
             if(err) {
