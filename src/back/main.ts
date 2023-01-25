@@ -14,7 +14,7 @@ APP.get('/', (request, result) => {
     result.sendFile(path.resolve(WEB_INDEX));
 });
 
-APP.get('/test-content', async (request, result) => {
+APP.get('/newborns-data', async (request, result) => {
     result.send(await selectAllData(nacimientos));
 });
 
