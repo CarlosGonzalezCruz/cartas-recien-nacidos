@@ -19,6 +19,10 @@
     height: 100vh;
 }
 
+.jquery-hidden {
+    display: none; /* Different from bootstrap's d-none in that it's not !important */
+}
+
 .option-panel {
     margin-top: 0.5rem;
     background: #eee;
@@ -55,6 +59,16 @@
 .bg-orange {
     background-color: rgb(255, 161, 98);
     color: white;
+}
+
+.btn-inactive {
+    background-color: rgb(100, 100, 180);
+    color: white;
+}
+
+.btn-active {
+    background-color: rgb(255, 161, 98);
+    color: black;
 }
 
 .btn:active {

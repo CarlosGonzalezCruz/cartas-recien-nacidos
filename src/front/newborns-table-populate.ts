@@ -2,14 +2,19 @@ let template = $("#newborns-row-template");
 let tableBody = $("#newborns-table-body");
 template.remove();
 
-(async () => {
-    let fetchResult = await fetch("newborns-data");
-    let data = await fetchResult.json();
+
+export function populateTable(data :any[]) {
+    clearTable(tableBody);
 
     for(let newborn of data) {
         generateRow(newborn, template, tableBody);
     }
-})();
+}
+
+
+function clearTable(tableBody :JQuery<HTMLElement>) {
+    tableBody.find(":not(#newborns-row-template)").remove();
+}
 
 
 function generateRow(data :any, template :JQuery<HTMLElement>, tableBody :JQuery<HTMLElement>) {
@@ -26,4 +31,5 @@ function generateRow(data :any, template :JQuery<HTMLElement>, tableBody :JQuery
 
     row.html(rowHtml);
     tableBody.append(row);
+    row.show();
 }
