@@ -1,6 +1,6 @@
 
 .overflow-y {
-    overflow-y: scroll;
+    overflow-y: auto;
 }
 
 .h-15 {

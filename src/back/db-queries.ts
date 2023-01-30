@@ -29,3 +29,21 @@ export function getNewbornsWithAddressOnly() {
         ORDER BY NombreCarga DESC, Nacido_Nombre, Nacido_Apellido1, Nacido_Apellido2
     `);
 }
+
+export function getNewbornsWithCustomFilter(...params :[string, string][]) {
+    let conditions = [];
+    for(let p of params) {
+        if(!!p[0] && !!p[1]) { // Neither string is null, undefined, or empty
+            conditions.push(`${p[0]} LIKE "%${p[1]}%"`);
+        }
+    }
+    let condition = conditions.join(" AND ");
+    if(!!condition) {
+        return db.performQuery(`
+            SELECT * FROM Nacimientos WHERE ${condition}
+            ORDER BY NombreCarga DESC, Nacido_Nombre, Nacido_Apellido1, Nacido_Apellido2
+        `);    
+    } else {
+        return getAllNewborns();
+    }
+}

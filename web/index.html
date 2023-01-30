@@ -15,6 +15,7 @@
                 <h1>Gestión Cartas Recién Nacidos</h1>
             </div>
             <div class="row overflow-y h-70 my-1">
+                <div class="w-100">
                 <table class="table table-striped">
                     <thead class="thead-dark">
                         <tr>
@@ -37,6 +38,10 @@
                         </tr>
                     </tbody>
                 </table>
+                </div>
+                <div class="w-100">
+                    <!-- Intentionally empty filler -->
+                </div>
             </div>
             <div class="row h-20">
                 <div class="col-md-6 d-flex flex-column">
@@ -47,13 +52,14 @@
                         <div id="filters-panel" class="row">
                             <div class="col-sm-9 d-flex flex-column">
                                 <div id="btn-filter-last-load" class="btn btn-inactive my-1">Mostrar última carga</div>
-                                <div id="btn-filter-all" class="btn btn-active my-1">Mostrar todos</div>
+                                <div id="btn-filter-all" class="btn btn-inactive my-1">Mostrar todos</div>
                                 <div id="btn-filter-address-only" class="btn btn-inactive my-1">Mostrar sólo con dirección</div>
                             </div>
                             <div class="col-sm-3 d-flex flex-column">
-                                <div class="btn btn-inactive my-1 h-100 d-flex justify-content-center">
+                                <div id="btn-filter-custom" class="btn btn-inactive my-1 h-100 d-flex justify-content-center">
                                     <img src="icons/funnel.svg" type="image/svg" class="w-100 svg-inverted-color d-none d-md-block">
-                                    <img src="icons/funnel.svg" type="image/svg" class="svg-inverted-color d-block d-md-none mx-auto">
+                                    <img src="icons/funnel.svg" type="image/svg" class="svg-inverted-color d-inline d-md-none">
+                                    <span class="d-md-none">Filtro personalizado</span>
                                 </div>
                             </div>
                         </div>
@@ -67,15 +73,65 @@
                         <div class="row">
                             <div class="col-md-6 d-flex flex-column">
                                 <div class="btn bg-green my-1 h-100 d-flex justify-content-center">
+                                    <img src="icons/file-earmark-plus.svg" type="image/svg" class="svg-inverted-color">
                                     Nueva carga
                                 </div>
                             </div>
                             <div class="col-md-6 d-flex flex-column">
                                 <div class="btn bg-red my-1 h-100 d-flex justify-content-center">
+                                    <img src="icons/file-earmark-x.svg" type="image/svg" class="svg-inverted-color">
                                     Eliminar carga
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="modal-filter-custom" class="modal fade" role="dialog">
+            <div class="modal-dialog modal-md" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Filtro personalizado</h2>
+                    </div>
+                    <div class="modal-body">
+                        <form id="form-filter-custom">
+                            <div class="form-group row">
+                                <label for="filter-custom-load-name" class="col-md-4 col-form-label">Nombre Carga:</label>
+                                <input id="filter-custom-load-name" name="NombreCarga" class="col-md-7 form-control"
+                                placeholder="2023-01-ENERO">
+                            </div>
+                            <div class="form-group row">
+                                <label for="filter-custom-load-year" class="col-md-4 col-form-label">Año Carga: </label>
+                                <input id="filter-custom-load-year" name="AnnoCarga" class="col-md-7 form-control"
+                                placeholder="2023">
+                            </div>
+                            <div class="form-group row">
+                                <label for="filter-custom-load-month" class="col-md-4 col-form-label">Mes Carga: </label>
+                                <input id="filter-custom-load-month" name="MesCarga" class="col-md-7 form-control"
+                                placeholder="ENERO">
+                            </div>
+                            <div class="form-group row">
+                                <label for="filter-custom-newborn-name" class="col-md-4 col-form-label">Nombre: </label>
+                                <input id="filter-custom-newborn-name" name="Nacido_Nombre" class="col-md-7 form-control"
+                                placeholder="JOSE MARÍA">
+                            </div>
+                            <div class="form-group row">
+                                <label for="filter-custom-newborn-surname1" class="col-md-4 col-form-label">Apellido 1: </label>
+                                <input id="filter-custom-newborn-surname1" name="Nacido_Apellido1" class="col-md-7 form-control"
+                                placeholder="HERNÁNDEZ">
+                            </div>
+                            <div class="form-group row">
+                                <label for="filter-custom-newborn-surname2" class="col-md-4 col-form-label">Apellido 2: </label>
+                                <input id="filter-custom-newborn-surname2" name="Nacido_Apellido2" class="col-md-7 form-control"
+                                placeholder="DEL VALLE">
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="btn btn-secondary" data-dismiss="modal">Cancelar</div>
+                        <div id="btn-filter-custom-search" class="btn btn-primary">Buscar</div>
                     </div>
                 </div>
             </div>

@@ -18,6 +18,7 @@ process.on("close", () => {
 
 APP.use(express.static("web"));
 APP.use(express.static("out/front"));
+APP.use(express.json());
 
 APP.get('/', (request, result) => {
     result.sendFile("index.html");
@@ -33,4 +34,8 @@ APP.get('/newborns-data/all', async (request, result) => {
 
 APP.get('/newborns-data/address-only', async (request, result) => {
     result.send(await db.getNewbornsWithAddressOnly());
+});
+
+APP.post('/newborns-data/custom', async (request, result) => {
+    result.send(await db.getNewbornsWithCustomFilter(...request.body));
 });

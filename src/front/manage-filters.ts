@@ -1,6 +1,7 @@
 import { populateTable } from "./newborns-table-populate.js";
 
-let filterButtons = $("#filters-panel .btn"); 
+
+let filterButtons = $("#filters-panel .btn");
 
 
 export function enableFilterButtons() {
@@ -15,6 +16,20 @@ export function enableFilterButtons() {
     $("#btn-filter-address-only").on("click", async e => {
         populateWithDataFetchedFrom("newborns-data/address-only", $(e.currentTarget));
     });
+
+    $("#btn-filter-custom").on("click", async e => {
+        $("#modal-filter-custom").modal("show");
+    });
+
+    $("#btn-filter-custom-search").on("click", async e => {
+        customFilterSubmit();
+    });
+
+    $("#modal-filter-custom").on("keypress", async e => {
+        if(e.key == "Enter") {
+            customFilterSubmit();
+        }
+    });
 }
 
 
@@ -23,13 +38,32 @@ export function applyDefaultFilter() {
 }
 
 
-async function populateWithDataFetchedFrom(path :string, button :JQuery<HTMLElement>) {
+function customFilterSubmit() {
+    let formData = new FormData($("#form-filter-custom").get(0) as HTMLFormElement);
+    populateWithDataFetchedFrom("newborns-data/custom", $("#btn-filter-custom"), Array.from(formData.entries()));
+    $("#modal-filter-custom").modal("hide");
+}
+
+
+async function populateWithDataFetchedFrom(path :string, button :JQuery<HTMLElement>, postBody? :any) {
     filterButtons.removeClass("btn-active");
     filterButtons.addClass("btn-inactive");
+    filterButtons.find("img[type='image/svg']").addClass("svg-inverted-color");
     button.removeClass("btn-inactive");
     button.addClass("btn-active");
+    button.find("img[type='image/svg']").removeClass("svg-inverted-color");
 
-    let fetchResult = await fetch(path);
+    let fetchInit = postBody == null ?
+    {
+        method: "get"
+    } :
+    {
+        method: "post",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(postBody)
+    };
+
+    let fetchResult = await fetch(path, fetchInit);
     let data = await fetchResult.json();
 
     populateTable(data);
