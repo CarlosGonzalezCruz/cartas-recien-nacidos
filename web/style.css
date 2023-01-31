@@ -78,3 +78,7 @@
 .svg-inverted-color {
     filter: invert(1)
 }
+
+.btn-inactive img[type='image/svg'] {
+    filter: invert(1)
+}

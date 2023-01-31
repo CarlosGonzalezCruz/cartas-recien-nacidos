@@ -57,8 +57,8 @@
                             </div>
                             <div class="col-sm-3 d-flex flex-column">
                                 <div id="btn-filter-custom" class="btn btn-inactive my-1 h-100 d-flex justify-content-center">
-                                    <img src="icons/funnel.svg" type="image/svg" class="w-100 svg-inverted-color d-none d-md-block">
-                                    <img src="icons/funnel.svg" type="image/svg" class="svg-inverted-color d-inline d-md-none">
+                                    <img src="icons/funnel.svg" type="image/svg" class="w-100 d-none d-md-block">
+                                    <img src="icons/funnel.svg" type="image/svg" class="d-inline d-md-none">
                                     <span class="d-md-none">Filtro personalizado</span>
                                 </div>
                             </div>
@@ -72,18 +72,31 @@
                         </div>
                         <div class="row">
                             <div class="col-md-6 d-flex flex-column">
-                                <div class="btn bg-green my-1 h-100 d-flex justify-content-center">
+                                <div id="btn-add-load" class="btn bg-green my-1 h-100 d-flex justify-content-center">
                                     <img src="icons/file-earmark-plus.svg" type="image/svg" class="svg-inverted-color">
                                     Nueva carga
                                 </div>
                             </div>
                             <div class="col-md-6 d-flex flex-column">
-                                <div class="btn bg-red my-1 h-100 d-flex justify-content-center">
+                                <div id="btn-remove-load" class="btn bg-red my-1 h-100 d-flex justify-content-center">
                                     <img src="icons/file-earmark-x.svg" type="image/svg" class="svg-inverted-color">
                                     Eliminar carga
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="modal-dialog" class="modal fade" role="dialog">
+            <div class="modal-dialog modal-md" role="document">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <p id="modal-dialog-message"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="btn btn-primary" data-dismiss="modal">Aceptar</div>
                     </div>
                 </div>
             </div>
@@ -98,34 +111,34 @@
                     <div class="modal-body">
                         <form id="form-filter-custom">
                             <div class="form-group row">
-                                <label for="filter-custom-load-name" class="col-md-4 col-form-label">Nombre Carga:</label>
+                                <label for="filter-custom-load-name" class="col-md-4 text-md-right col-form-label">Nombre Carga</label>
                                 <input id="filter-custom-load-name" name="NombreCarga" class="col-md-7 form-control"
-                                placeholder="2023-01-ENERO">
+                                placeholder="YYYY-MM-Nombre del mes">
                             </div>
                             <div class="form-group row">
-                                <label for="filter-custom-load-year" class="col-md-4 col-form-label">Año Carga: </label>
+                                <label for="filter-custom-load-year" class="col-md-4 text-md-right col-form-label">Año Carga</label>
                                 <input id="filter-custom-load-year" name="AnnoCarga" class="col-md-7 form-control"
-                                placeholder="2023">
+                                placeholder="YYYY">
                             </div>
                             <div class="form-group row">
-                                <label for="filter-custom-load-month" class="col-md-4 col-form-label">Mes Carga: </label>
+                                <label for="filter-custom-load-month" class="col-md-4 text-md-right col-form-label">Mes Carga</label>
                                 <input id="filter-custom-load-month" name="MesCarga" class="col-md-7 form-control"
-                                placeholder="ENERO">
+                                placeholder="Nombre del mes">
                             </div>
                             <div class="form-group row">
-                                <label for="filter-custom-newborn-name" class="col-md-4 col-form-label">Nombre: </label>
+                                <label for="filter-custom-newborn-name" class="col-md-4 text-md-right col-form-label">Nombre</label>
                                 <input id="filter-custom-newborn-name" name="Nacido_Nombre" class="col-md-7 form-control"
-                                placeholder="JOSE MARÍA">
+                                placeholder="Nombre del recién nacido">
                             </div>
                             <div class="form-group row">
-                                <label for="filter-custom-newborn-surname1" class="col-md-4 col-form-label">Apellido 1: </label>
+                                <label for="filter-custom-newborn-surname1" class="col-md-4 text-md-right col-form-label">Apellido 1</label>
                                 <input id="filter-custom-newborn-surname1" name="Nacido_Apellido1" class="col-md-7 form-control"
-                                placeholder="HERNÁNDEZ">
+                                placeholder="Primer apellido del recién nacido">
                             </div>
                             <div class="form-group row">
-                                <label for="filter-custom-newborn-surname2" class="col-md-4 col-form-label">Apellido 2: </label>
+                                <label for="filter-custom-newborn-surname2" class="col-md-4 text-md-right col-form-label">Apellido 2</label>
                                 <input id="filter-custom-newborn-surname2" name="Nacido_Apellido2" class="col-md-7 form-control"
-                                placeholder="DEL VALLE">
+                                placeholder="Segundo apellido del recién nacido">
                             </div>
                         </form>
                     </div>
@@ -136,6 +149,28 @@
                 </div>
             </div>
         </div>
+        <div id="modal-remove-load" class="modal fade" role="dialog">
+            <div class="modal-dialog modal-md" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Eliminar carga</h2>
+                    </div>
+                    <div class="modal-body">
+                        <form id="form-remove-load">
+                            <div class="form-group row">
+                                <label for="selector-remove-load" class="col-md-4 text-md-right col-form-label">Nombre carga</label>
+                                <input id="selector-remove-load" list="selector-remove-load-options" name="NombreCarga" class="col-md-7 form-control",
+                                placeholder="YYYY-MM-Nombre del mes">
+                                <datalist id="selector-remove-load-options" class="form-select"></datalist>
+                                <small class="form-text text-muted mx-auto">Esta acción modificará la base de datos permanentemente.</small>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="btn btn-secondary" data-dismiss="modal">Cancelar</div>
+                        <div id="btn-remove-load-confirm" class="btn btn-danger">Eliminar</div>
+                    </div>
+                </div>
 
         <script src="https://code.jquery.com/jquery-3.6.3.slim.min.js" crossorigin="anonymous"></script>
         <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" crossorigin="anonymous"></script>

@@ -24,12 +24,6 @@ export function enableFilterButtons() {
     $("#btn-filter-custom-search").on("click", async e => {
         customFilterSubmit();
     });
-
-    $("#modal-filter-custom").on("keypress", async e => {
-        if(e.key == "Enter") {
-            customFilterSubmit();
-        }
-    });
 }
 
 
@@ -48,10 +42,8 @@ function customFilterSubmit() {
 async function populateWithDataFetchedFrom(path :string, button :JQuery<HTMLElement>, postBody? :any) {
     filterButtons.removeClass("btn-active");
     filterButtons.addClass("btn-inactive");
-    filterButtons.find("img[type='image/svg']").addClass("svg-inverted-color");
     button.removeClass("btn-inactive");
     button.addClass("btn-active");
-    button.find("img[type='image/svg']").removeClass("svg-inverted-color");
 
     let fetchInit = postBody == null ?
     {

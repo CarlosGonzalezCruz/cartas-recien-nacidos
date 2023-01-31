@@ -47,3 +47,11 @@ export function getNewbornsWithCustomFilter(...params :[string, string][]) {
         return getAllNewborns();
     }
 }
+
+export function getDistinctLoads() {
+    return db.performQuery(
+        `
+            SELECT DISTINCT(NombreCarga) FROM Nacimientos;
+        `
+    );
+}

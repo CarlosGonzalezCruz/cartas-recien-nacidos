@@ -36,6 +36,10 @@ APP.get('/newborns-data/address-only', async (request, result) => {
     result.send(await db.getNewbornsWithAddressOnly());
 });
 
+APP.get('/newborns-data/loads', async (request, result) => {
+    result.send(await db.getDistinctLoads());
+});
+
 APP.post('/newborns-data/custom', async (request, result) => {
     result.send(await db.getNewbornsWithCustomFilter(...request.body));
 });
