@@ -43,3 +43,9 @@ APP.get('/newborns-data/loads', async (request, result) => {
 APP.post('/newborns-data/custom', async (request, result) => {
     result.send(await db.getNewbornsWithCustomFilter(...request.body));
 });
+
+APP.delete('/newborns-data/loads', async (request, result) => {
+    let loadName = request.body[0][1];
+    await db.deleteLoad(loadName);
+    result.send(await db.lastOperationAmountOfRowsUpdated());
+});

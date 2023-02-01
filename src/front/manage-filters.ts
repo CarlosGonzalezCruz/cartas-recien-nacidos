@@ -1,7 +1,9 @@
 import { populateTable } from "./newborns-table-populate.js";
+import * as utils from "./utils.js";
 
 
 let filterButtons = $("#filters-panel .btn");
+let currentFilterButton :JQuery<HTMLElement>;
 
 
 export function enableFilterButtons() {
@@ -28,7 +30,13 @@ export function enableFilterButtons() {
 
 
 export function applyDefaultFilter() {
+    currentFilterButton = $("#btn-filter-last-load");
     populateWithDataFetchedFrom("newborns-data/last-load", $("#btn-filter-last-load"));
+}
+
+
+export function reapplyCurrentFilter() {
+    currentFilterButton.trigger("click");
 }
 
 
@@ -44,6 +52,7 @@ async function populateWithDataFetchedFrom(path :string, button :JQuery<HTMLElem
     filterButtons.addClass("btn-inactive");
     button.removeClass("btn-inactive");
     button.addClass("btn-active");
+    currentFilterButton = button;
 
     let fetchInit = postBody == null ?
     {
@@ -55,8 +64,12 @@ async function populateWithDataFetchedFrom(path :string, button :JQuery<HTMLElem
         body: JSON.stringify(postBody)
     };
 
-    let fetchResult = await fetch(path, fetchInit);
-    let data = await fetchResult.json();
+    try {
+        let fetchResult = await fetch(path, fetchInit);
+        let data = await fetchResult.json();
+        populateTable(data);
+    } catch(error) {
+        utils.displayMessageBox("Ha ocurrido un problema al conectar con el servidor.", "error");
+    }
 
-    populateTable(data);
 }

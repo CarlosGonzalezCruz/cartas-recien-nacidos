@@ -55,3 +55,20 @@ export function getDistinctLoads() {
         `
     );
 }
+
+export function deleteLoad(loadName :string) {
+    return db.performQuery(
+        `
+            DELETE FROM Nacimientos WHERE NombreCarga = "${loadName}";
+        `
+    );
+}
+
+export async function lastOperationAmountOfRowsUpdated() {
+    let query = await db.performQuery(
+        `
+            SELECT CHANGES() AS COUNT;
+        `
+    ) as {COUNT :number}[];
+    return query[0];
+}
