@@ -3,13 +3,77 @@ import * as utils from "./utils.js";
 
 
 export function enableLoadUpdateButtons() {
+    $("#btn-create-load").on("click", async e => {
+        prepareDefaultDate();
+        setCreateLoadConfirmEnabled(validateLoadCreation());
+        $("#modal-create-load").modal("show");
+        $("#btn-create-load-confirm").on("click", async e => {
+            if(validateLoadCreation()) {
+                utils.displayMessageBox("Vale.", "success");
+                $("#modal-create-load").modal("hide");
+            } else {
+                utils.displayMessageBox("Los datos introducidos no son correctos. Por favor revíselos.", "error");
+            }
+        });
+    });
     $("#btn-remove-load").on("click", async e => {
         fetchPossibleLoads();
         $("#modal-remove-load").modal("show");
         $("#btn-remove-load-confirm").on("click", async e => {
             removeLoads();
         });
-    }); 
+    });
+    assignModalCreateLoadEvents();
+}
+
+
+function prepareDefaultDate() {
+    let currentDate = new Date();
+    $("#selector-create-load-year").val(currentDate.getFullYear());
+    $("#selector-create-load-month").val(utils.getMonthName(currentDate.getMonth()));
+    $("#selector-create-load-month-options").empty();
+    for(let month of utils.allMonthNames()) {
+        let option = $(document.createElement("option"));
+        option.attr("value", month);
+        $("#selector-create-load-month-options").append(option);
+    }
+}
+
+
+function assignModalCreateLoadEvents() {
+    $("#selector-create-load-year").on("blur", e => setCreateLoadConfirmEnabled(validateLoadCreation()));
+    $("#selector-create-load-month").on("blur", e => setCreateLoadConfirmEnabled(validateLoadCreation()));
+    $("#selector-create-load-file").on("change", e => setCreateLoadConfirmEnabled(validateLoadCreation()));
+}
+
+
+function setCreateLoadConfirmEnabled(state :boolean) {
+    let button = $("#btn-create-load-confirm")
+    if(state) {
+        button.removeClass("disabled");
+        button.prop("disabled", false);
+    } else {
+        button.addClass("disabled");
+        button.prop("disabled", true);
+    }
+}
+
+
+function validateLoadCreation() {
+    if($("#selector-create-load-year").val() == "") {
+        return false;
+    }
+    let monthName = $("#selector-create-load-month").val() as string;
+    if(monthName == "") {
+        return false;
+    } else if(utils.getMonthId(monthName) == null) {
+        return false;
+    }
+    let selectorFile = $("#selector-create-load-file").val() as string[];
+    if(selectorFile.length == 0) {
+        return false;
+    }
+    return true;
 }
 
 

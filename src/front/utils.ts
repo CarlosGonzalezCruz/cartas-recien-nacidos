@@ -2,9 +2,11 @@
 const MSG_BOX = $("#modal-dialog");
 const MSG_BOX_ICONS = {
     none: "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=", // 1x1 blank image to use as placeholder
-    success: "icons/hands-thumbs-up.svg",
+    success: "icons/hand-thumbs-up.svg",
     error: "icons/exclamation-circle.svg"
 };
+
+const MONTH_NAMES = ["<0>", "ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
 
 
 export function displayMessageBox(message :string, icon :keyof typeof MSG_BOX_ICONS = "none") {
@@ -18,6 +20,32 @@ export function displayMessageBox(message :string, icon :keyof typeof MSG_BOX_IC
             MSG_BOX.modal("show");
             $(".modal").off("hidden.bs.modal");
         });
+    }
+}
+
+
+export function getMonthName(id :number) {
+    if(id >= 1 && id <= 12) {
+        return MONTH_NAMES[id];
+    } else {
+        throw new RangeError(`Only values from 1 to 12 are allowed. Received: ${id}`);
+    }
+}
+
+
+export function getMonthId(name :string) {
+    let selectedId = MONTH_NAMES.indexOf(name.toUpperCase());
+    if(selectedId != -1) {
+        return selectedId;
+    } else {
+        return null;
+    }
+}
+
+
+export function* allMonthNames() {
+    for(let i = 1; i < 13; i++) {
+        yield MONTH_NAMES[i];
     }
 }
 

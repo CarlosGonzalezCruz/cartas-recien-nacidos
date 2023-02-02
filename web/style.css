@@ -83,6 +83,10 @@
     filter: invert(1)
 }
 
+.btn:disabled:active {
+    background-color: unset !important;
+}
+
 .svg-gray-color {
     opacity: 0.1;
 }
