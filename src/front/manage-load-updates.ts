@@ -7,22 +7,25 @@ export function enableLoadUpdateButtons() {
         prepareDefaultDate();
         setCreateLoadConfirmEnabled(validateLoadCreation());
         $("#modal-create-load").modal("show");
-        $("#btn-create-load-confirm").on("click", async e => {
-            if(validateLoadCreation()) {
-                utils.displayMessageBox("Vale.", "success");
-                $("#modal-create-load").modal("hide");
-            } else {
-                utils.displayMessageBox("Los datos introducidos no son correctos. Por favor revíselos.", "error");
-            }
-        });
     });
     $("#btn-remove-load").on("click", async e => {
         fetchPossibleLoads();
         $("#modal-remove-load").modal("show");
-        $("#btn-remove-load-confirm").on("click", async e => {
-            removeLoads();
-        });
     });
+
+    $("#btn-create-load-confirm").on("click", async e => {
+        if(validateLoadCreation()) {
+            createLoads();
+            $("#modal-create-load").modal("hide");
+        } else {
+            utils.displayMessageBox("Los datos introducidos no son correctos. Por favor revíselos.", "error");
+        }
+    });
+
+    $("#btn-remove-load-confirm").on("click", async e => {
+        removeLoads();
+    });
+
     assignModalCreateLoadEvents();
 }
 
@@ -30,7 +33,7 @@ export function enableLoadUpdateButtons() {
 function prepareDefaultDate() {
     let currentDate = new Date();
     $("#selector-create-load-year").val(currentDate.getFullYear());
-    $("#selector-create-load-month").val(utils.getMonthName(currentDate.getMonth()));
+    $("#selector-create-load-month").val(utils.getMonthName(currentDate.getMonth() + 1));
     $("#selector-create-load-month-options").empty();
     for(let month of utils.allMonthNames()) {
         let option = $(document.createElement("option"));
@@ -91,6 +94,28 @@ async function fetchPossibleLoads() {
 }
 
 
+async function createLoads() {
+    let formData = new FormData($("#form-create-load").get(0) as HTMLFormElement);
+
+    let fetchInit = {
+        method: "post",
+        body: formData
+    };
+
+    try {
+        let fetchRequest = await fetch("/newborns-data/loads", fetchInit);
+        let data = await fetchRequest.json();
+        if(data.success) {
+            utils.displayMessageBox(data.msg, "success");
+        } else {
+            utils.displayMessageBox(`No se ha podido crear la carga: ${data.msg}`, "error");
+        }
+    } catch(error) {
+        utils.displayMessageBox(`Ha ocurrido un problema al conectar con el servidor`, "error");
+    }
+}
+
+
 async function removeLoads() {
     let formData = new FormData($("#form-remove-load").get(0) as HTMLFormElement);
     let entries = Array.from(formData.entries());
@@ -108,6 +133,6 @@ async function removeLoads() {
         utils.displayMessageBox(`Se ha eliminado ${count} registros.`, count > 0 ? "success" : "error");
         filters.reapplyCurrentFilter();
     } catch(error) {
-        utils.displayMessageBox(`Ha habido un problema al conectar con el servidor`, "error");
+        utils.displayMessageBox(`Ha ocurrido un problema al conectar con el servidor`, "error");
     }
 }

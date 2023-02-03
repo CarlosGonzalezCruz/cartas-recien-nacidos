@@ -24,6 +24,15 @@ export function displayMessageBox(message :string, icon :keyof typeof MSG_BOX_IC
 }
 
 
+export function preloadMsgBoxIcons() {
+    for(let entry of Object.entries(MSG_BOX_ICONS)) {
+        let newImgElement = new Image();
+        newImgElement.src = entry[1];
+        $("#modal-preloaded-icons").append(newImgElement);
+    }
+}
+
+
 export function getMonthName(id :number) {
     if(id >= 1 && id <= 12) {
         return MONTH_NAMES[id];
@@ -51,10 +60,10 @@ export function* allMonthNames() {
 
 
 export function addsModalButtonKeybinding() {
-    $(".modal").on("keypress", e => {
+    $(document).on("keypress", e => {
         if(e.key == "Enter") {
-            e.preventDefault();
-            $(e.currentTarget).find(".modal-footer .btn:last-child").trigger("click");
+            $(".modal:visible input").trigger("blur");
+            $(".modal:visible .modal-footer .btn:last-child").get(0)?.click();
         }
     });
 }

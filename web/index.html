@@ -107,6 +107,9 @@
                     </div>
                 </div>
             </div>
+            <div id="modal-preloaded-icons" hidden>
+                <!-- Will be filled in runtime -->
+            </div>
         </div>
 
         <div id="modal-filter-custom" class="modal fade" role="dialog">
@@ -164,7 +167,7 @@
                         <h2>Nueva carga</h2>
                     </div>
                     <div class="modal-body">
-                        <form id="form-remove-load">
+                        <form id="form-create-load">
                             <div class="form-group row">
                                 <label for="selector-create-load-year" class="col-md-4 text-md-right col-form-label">Mes carga</label>
                                 <input id="selector-create-load-year" name="AnnoCarga" class="col-md-3 form-control",
@@ -175,7 +178,7 @@
                             </div>
                             <div class="form-group row">
                                 <label for="selector-create-load-file" class="col-md-4 text-md-right col-form-label">Fichero</label>
-                                <input id="selector-create-load-file" type="file" class="form-control col-md-7">
+                                <input id="selector-create-load-file" type="file" name="Fichero" class="form-control col-md-7">
                                 <small class="form-text text-muted mx-auto">Esta acción modificará la base de datos permanentemente.</small>
                             </div>
                         </form>

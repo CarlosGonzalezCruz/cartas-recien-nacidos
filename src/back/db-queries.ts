@@ -56,12 +56,21 @@ export function getDistinctLoads() {
     );
 }
 
+export function isLoadPresent(loadName :string) {
+    return db.performQuery(
+        `
+            SELECT COUNT(1) AS COUNT from Nacimientos WHERE NombreCarga = "${loadName}";
+        `
+    ).then(rows => rows[0]["COUNT"] != 0);
+}
+
 export function deleteLoad(loadName :string) {
+    console.log(`Requested load ${loadName} deletion`);
     return db.performQuery(
         `
             DELETE FROM Nacimientos WHERE NombreCarga = "${loadName}";
         `
-    );
+    ).then(rows => console.log(`Deleted ${lastOperationAmountOfRowsUpdated()} rows`));
 }
 
 export async function lastOperationAmountOfRowsUpdated() {

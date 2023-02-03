@@ -23,7 +23,7 @@ export function close() {
 }
 
 
-export function performQuery(query :string) {
+export function performQuery(query :string) :Promise<{[key :string] :any}[]> {
     return new Promise((resolve, reject) => {
         db.all(query, (err, rows) => {
             if(err) {

@@ -8,3 +8,4 @@ filters.applyDefaultFilter();
 updates.enableLoadUpdateButtons();
 
 utils.addsModalButtonKeybinding();
+utils.preloadMsgBoxIcons();
