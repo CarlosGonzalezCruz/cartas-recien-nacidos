@@ -56,21 +56,23 @@ export function getDistinctLoads() {
     );
 }
 
-export function isLoadPresent(loadName :string) {
-    return db.performQuery(
+export async function isLoadPresent(loadName :string) {
+    let rows = await db.performQuery(
         `
             SELECT COUNT(1) AS COUNT from Nacimientos WHERE NombreCarga = "${loadName}";
         `
-    ).then(rows => rows[0]["COUNT"] != 0);
+    );
+    return rows[0]["COUNT"] != 0;
 }
 
-export function deleteLoad(loadName :string) {
+export async function deleteLoad(loadName :string) {
     console.log(`Requested load ${loadName} deletion`);
-    return db.performQuery(
+    let rows = await db.performQuery(
         `
             DELETE FROM Nacimientos WHERE NombreCarga = "${loadName}";
         `
-    ).then(rows => console.log(`Deleted ${lastOperationAmountOfRowsUpdated()} rows`));
+    );
+    return console.log(`Deleted ${lastOperationAmountOfRowsUpdated()} rows`);
 }
 
 export async function lastOperationAmountOfRowsUpdated() {
