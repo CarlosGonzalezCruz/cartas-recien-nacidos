@@ -20,7 +20,39 @@ export async function createLoads(year :string | number, month :string, file :Up
         return loadName;
     }
 
-    console.log(readFileEntries(file).next().value);
+    let newborns :db.Newborn[] = []
+    // This creation of data is provisional
+    for(let newborn of readFileEntries(file)) {
+        newborns.push({
+            "Nacido_Fecha": new Date(newborn.Nacido_Fecha),
+            "Nacido_Nombre": newborn.Nacido_Nombre,
+            "Nacido_Apellido1": newborn.Nacido_Apellido1,
+            "Nacido_Apellido2": newborn.Nacido_Apellido2,
+            "Padre_Nombre": newborn.Padre_Nombre,
+            "Padre_Apellido1": newborn.Padre_Apellido1,
+            "Padre_Apellido2": newborn.Padre_Apellido2,
+            "Padre_DNI_Extranjero": newborn.Padre_DNI_Extranjero == '1',
+            "Padre_DNI": Number(newborn.Padre_DNI),
+            "Padre_DNI_Letra": newborn.Padre_DNI_Letra,
+            "Madre_Nombre": newborn.Madre_Nombre,
+            "Madre_Apellido1": newborn.Madre_Apellido1,
+            "Madre_Apellido2": newborn.Madre_Apellido2,
+            "Madre_DNI_Extranjero": newborn.Madre_DNI_Extranjero == '1',
+            "Madre_DNI": Number(newborn.Madre_DNI),
+            "Madre_DNI_Letra": newborn.Madre_DNI_Letra,
+            "NombreCarga": loadName,
+            "AnnoCarga": Number(year),
+            "MesCarga": month,
+            "IdMesCarga": getMonthId(month),
+            "ViviendaDireccion": stringifyAddress(newborn.Padre_ViviendaDireccion),
+            "ViviendaCodigoPostal": Number(newborn.Padre_ViviendaCodigoPostal),
+            "ViviendaNombreMunicipio": "ALCALA DE HENARES",
+            "FechaNacimiento": new Date(newborn.Nacido_Fecha),
+            "ObservacionesCruce": "Dirección del padre escogida provisionalmente."
+        });
+    }
+
+    db.insertNewborn(...newborns);
     return success(loadName);
 }
 
@@ -90,6 +122,11 @@ function enforceTwoDigits(value :number) {
     } else {
         return value.toString();
     }
+}
+
+
+function stringifyAddress(address :{TipoVia :string, NombreVia :string, Numero :string, Linea2 :string}) {
+    return `${address.TipoVia} ${address.NombreVia}           , Nº ${address.Numero}, ${address.Linea2}`;
 }
 
 
