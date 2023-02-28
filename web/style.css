@@ -1,0 +1,92 @@
+
+.overflow-y {
+    overflow-y: auto;
+}
+
+.h-15 {
+    height: 15% !important;
+}
+
+.h-20 {
+    height: 20% !important;
+}
+
+.h-70 {
+    height: 70% !important;
+}
+
+.adjust-to-screen {
+    height: 100vh;
+}
+
+.jquery-hidden {
+    display: none; /* Different from bootstrap's d-none in that it's not !important */
+}
+
+.option-panel {
+    margin-top: 0.5rem;
+    background: #eee;
+    border-radius: 5px;
+}
+
+.margin-gutter-columns > div {
+    border: 10px solid white;
+}
+
+.margin-gutter-columns > div:first-child {
+    border-left: 0;
+}
+
+.margin-gutter-columns > div:last-child {
+    border-right: 0;
+}
+
+.bg-red {
+    background-color: rgb(255, 89, 89);
+    color: white;
+}
+
+.bg-green {
+    background-color: rgb(89, 180, 89);
+    color: white;
+}
+
+.bg-blue {
+    background-color: rgb(89, 89, 255);
+    color: white;
+}
+
+.bg-orange {
+    background-color: rgb(255, 161, 98);
+    color: white;
+}
+
+.btn-inactive {
+    background-color: rgb(100, 100, 180);
+    color: white;
+}
+
+.btn-active {
+    background-color: rgb(255, 161, 98);
+    color: black;
+}
+
+.btn:active {
+    background-color: black;
+}
+
+.svg-inverted-color {
+    filter: invert(1)
+}
+
+.btn-inactive img[type='image/svg'] {
+    filter: invert(1)
+}
+
+.btn:disabled:active {
+    background-color: unset !important;
+}
+
+.svg-gray-color {
+    opacity: 0.1;
+}
