@@ -14,9 +14,10 @@ export function listen(port :number) {
     });
 }
 
-process.on("close", () => {
+process.on("SIGINT", () => {
     db.close();
     console.log("Hasta luego");
+    process.exit();
 });
 
 APP.use(express.static("web"));
@@ -60,5 +61,7 @@ APP.post('/newborns-data/loads', async (request, result) => {
 APP.delete('/newborns-data/loads', async (request, result) => {
     let loadName = request.body[0][1];
     await db.deleteLoad(loadName);
-    result.send(await db.lastOperationAmountOfRowsUpdated());
+    result.send({
+        count: await db.lastOperationAmountOfRowsUpdated()
+    });
 });

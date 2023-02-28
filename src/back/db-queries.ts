@@ -1,7 +1,7 @@
 import * as db from './db-connection.js';
 
 export type Newborn = {
-    Nacido_Fecha :Date,
+    Nacido_Fecha :string,
     Nacido_Nombre :string,
     Nacido_Apellido1 :string,
     Nacido_Apellido2 :string,
@@ -21,7 +21,7 @@ export type Newborn = {
     ViviendaDireccion :string,
     ViviendaCodigoPostal :number,
     ViviendaNombreMunicipio :string,
-    FechaNacimiento :Date,
+    FechaNacimiento :string,
     ObservacionesCruce :string,
     [index :string] :any
 }
@@ -75,18 +75,32 @@ export function getNewbornsWithCustomFilter(...params :[string, string][]) {
 }
 
 
-export async function insertNewborn(...newborns :Newborn[]) {
+export async function insertNewborn(loadName :string, ...newborns :Newborn[]) {
+    console.log(`Solicitada la creación de la carga ${loadName}`);
     let query = `
         INSERT INTO Nacimientos(Nacido_Fecha, Nacido_Nombre, Nacido_Apellido1, Nacido_Apellido2, Padre_Nombre, Padre_Apellido1, Padre_Apellido2, Padre_DNI_Extranjero, Padre_DNI, Padre_DNI_Letra, Madre_Nombre, Madre_Apellido1, Madre_Apellido2, Madre_DNI_Extranjero, Madre_DNI, Madre_DNI_Letra, NombreCarga, AnnoCarga, MesCarga, IdMesCarga, ViviendaDireccion, ViviendaCodigoPostal, ViviendaNombreMunicipio, FechaNacimiento, ObservacionesCruce) VALUES
     `;
     let query_rows :string[] = [];
     for(let entry of newborns) {
-        let fields = Array.from(Object.keys(entry), key => entry[key]);
+        let fields = Array.from(Object.keys(entry), key => typeof entry[key] == "string" ? `"${entry[key]}"` : entry[key]);
         query_rows.push("(" + fields.join(",") + ")");
     }
     query = query + query_rows.join(",") + ";"
-    await db.performQuery(query);
-    console.log(`Created ${lastOperationAmountOfRowsUpdated()} rows`);
+    let success = false;
+    let amountOfRowsUpdated = 0;
+    try {
+        await db.performQuery(query);
+        success = true;
+        amountOfRowsUpdated = await lastOperationAmountOfRowsUpdated();
+    } catch(e) {
+        console.error("Error al guardar en la base de datos:");
+        console.error(e);
+    }
+    console.log(`Insertadas ${amountOfRowsUpdated} filas nuevas`);
+    return {
+        success: success,
+        count: amountOfRowsUpdated
+    };
 }
 
 
@@ -108,13 +122,13 @@ export async function isLoadPresent(loadName :string) {
 }
 
 export async function deleteLoad(loadName :string) {
-    console.log(`Requested load ${loadName} deletion`);
+    console.log(`Solicitada la eliminación de la carga ${loadName}`);
     await db.performQuery(
         `
             DELETE FROM Nacimientos WHERE NombreCarga = "${loadName}";
         `
     );
-    console.log(`Deleted ${lastOperationAmountOfRowsUpdated()} rows`);
+    console.log(`Eliminadas ${await lastOperationAmountOfRowsUpdated()} filas`);
 }
 
 export async function lastOperationAmountOfRowsUpdated() {
@@ -123,5 +137,5 @@ export async function lastOperationAmountOfRowsUpdated() {
             SELECT CHANGES() AS COUNT;
         `
     ) as {COUNT :number}[];
-    return query[0];
+    return query[0].COUNT;
 }

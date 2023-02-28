@@ -24,7 +24,7 @@ export async function createLoads(year :string | number, month :string, file :Up
     // This creation of data is provisional
     for(let newborn of readFileEntries(file)) {
         newborns.push({
-            "Nacido_Fecha": new Date(newborn.Nacido_Fecha),
+            "Nacido_Fecha": newborn.Nacido_Fecha,
             "Nacido_Nombre": newborn.Nacido_Nombre,
             "Nacido_Apellido1": newborn.Nacido_Apellido1,
             "Nacido_Apellido2": newborn.Nacido_Apellido2,
@@ -47,13 +47,17 @@ export async function createLoads(year :string | number, month :string, file :Up
             "ViviendaDireccion": stringifyAddress(newborn.Padre_ViviendaDireccion),
             "ViviendaCodigoPostal": Number(newborn.Padre_ViviendaCodigoPostal),
             "ViviendaNombreMunicipio": "ALCALA DE HENARES",
-            "FechaNacimiento": new Date(newborn.Nacido_Fecha),
+            "FechaNacimiento": newborn.Nacido_Fecha,
             "ObservacionesCruce": "Dirección del padre escogida provisionalmente."
         });
     }
 
-    db.insertNewborn(...newborns);
-    return success(loadName);
+    let result = await db.insertNewborn(loadName, ...newborns);
+    if(result.success) {
+        return success(`Se han añadido ${result.count} registros nuevos correspondientes a la carga ${loadName}.`);
+    } else {
+        return failure(`Consulta la consola del servidor para más información.`);
+    }
 }
 
 
@@ -68,8 +72,9 @@ async function generateLoadName(year :string | number, month :string) {
 
 
 function* readFileEntries(file :UploadedFile) {
-    let data = fs.readFileSync(file.filepath, "utf-8");
-    for(let row of data.split("\n")) {
+    let data = fs.readFileSync(file.filepath, "latin1");
+    // Substring removes the last \n. Without it, a final empty row would be added with every insert query.
+    for(let row of data.substring(0, data.length - 1).split("\n")) {
         yield {
             Nacido_Fecha: row.substring(26, 34).trim(),
             Nacido_Nombre: row.substring(34, 54).trim(),

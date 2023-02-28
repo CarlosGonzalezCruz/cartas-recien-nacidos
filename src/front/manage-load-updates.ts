@@ -107,6 +107,7 @@ async function createLoads() {
         let data = await fetchRequest.json();
         if(data.success) {
             utils.displayMessageBox(data.msg, "success");
+            filters.reapplyCurrentFilter();
         } else {
             utils.displayMessageBox(`No se ha podido crear la carga: ${data.msg}`, "error");
         }
@@ -129,8 +130,8 @@ async function removeLoads() {
     try {
         let fetchRequest = await fetch("/newborns-data/loads", fetchInit);
         let data = await fetchRequest.json();
-        let count = data['COUNT'];
-        utils.displayMessageBox(`Se ha eliminado ${count} registros.`, count > 0 ? "success" : "error");
+        let count = data.count;
+        utils.displayMessageBox(`Se han eliminado ${count} registros.`, count > 0 ? "success" : "error");
         filters.reapplyCurrentFilter();
     } catch(error) {
         utils.displayMessageBox(`Ha ocurrido un problema al conectar con el servidor`, "error");
