@@ -33,6 +33,12 @@ export function preloadMsgBoxIcons() {
 }
 
 
+export async function fetchPdf() {
+    let fetchRequest = await fetch("/newborns-data/letters");
+    displayMessageBox("Se ha solicitado la generación de cartas de la tabla en pantalla.");
+}
+
+
 export function getMonthName(id :number) {
     if(id >= 1 && id <= 12) {
         return MONTH_NAMES[id];
@@ -59,7 +65,7 @@ export function* allMonthNames() {
 }
 
 
-export function addsModalButtonKeybinding() {
+export function addModalButtonKeybinding() {
     $(document).on("keypress", e => {
         if(e.key == "Enter") {
             $(".modal:visible input").trigger("blur");

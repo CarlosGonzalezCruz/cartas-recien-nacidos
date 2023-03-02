@@ -45,6 +45,10 @@ APP.get('/newborns-data/loads', async (request, result) => {
     result.send(await db.getDistinctLoads());
 });
 
+APP.get('/newborns-data/letters', async (request, result) => {
+    result.send("pdf");
+});
+
 APP.post('/newborns-data/custom', async (request, result) => {
     result.send(await db.getNewbornsWithCustomFilter(...request.body));
 });
