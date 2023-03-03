@@ -1,0 +1,49 @@
+import PDF from "pdfkit";
+import { Newborn } from "./db-queries";
+
+
+const LETTER_FILE = "Sobres.pdf";
+
+// Sizes and distances are indicated in points (pt)
+
+export async function generateLettersForNewborns(...newborns :Newborn[]) {
+    return new Promise<Buffer>((resolve, reject) => {      
+        if(newborns.length == 0) {
+            reject();
+        }
+        
+        let document = new PDF({
+            size: [588, 232], // 20.75cm x 8.00cm
+            margin: 0
+        });
+
+        let buffers :any[] = [];
+        document.on("data", buffers.push.bind(buffers));
+        document.on("end", () => {
+            let pdfData = Buffer.concat(buffers);
+            resolve(pdfData);
+        });
+
+        let firstPage = true;
+        for(let newborn of newborns) {
+            if(!firstPage) {
+                // PDFKit documents have 1 page by default. If we were to add a new page for the first newborn, we'd be left with a blank leading page
+                document.addPage();
+            }
+            generatePage(document, newborn);
+            firstPage = false;
+        }
+        document.end();
+    });
+}
+
+
+function generatePage(document :PDFKit.PDFDocument, newborn :Newborn) {
+    document.image("assets/ayto-logo.jpg", 2, 2, {width: 116, height: 116});
+    document.image("assets/franqueo-pagado.jpg", 382, 2, {width: 182, height: 74});
+
+    document.fontSize(11);
+    document.text(`FAMILIARES DE ${newborn.Nacido_Nombre} ${newborn.Nacido_Apellido1} ${newborn.Nacido_Apellido2}`, 242, 145);
+    document.text(newborn.ViviendaDireccion, 242, 163);
+    document.text(`${newborn.ViviendaCodigoPostal} ${newborn.ViviendaNombreMunicipio}`, 242, 182);
+}

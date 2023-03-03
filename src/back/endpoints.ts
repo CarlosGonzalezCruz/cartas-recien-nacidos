@@ -4,6 +4,8 @@ import formidable from "formidable";
 import * as db from "./db-queries.js";
 import * as newborns from "./newborns-load-creation.js";
 import { UploadedFile } from "./newborns-load-creation.js";
+import { generateLettersForNewborns } from "./generate-letters.js";
+
 
 const APP = express();
 
@@ -46,7 +48,18 @@ APP.get('/newborns-data/loads', async (request, result) => {
 });
 
 APP.get('/newborns-data/letters', async (request, result) => {
-    result.send("pdf");
+    console.log("Generación de cartas solicitada");
+    let selectedNewborns = db.getLastFilterQueryResult();
+    try {
+        let letterData = await generateLettersForNewborns(...selectedNewborns);
+        result.writeHead(200, {
+            "Content-Length": Buffer.byteLength(letterData),
+            "Content-Type": "application/pdf",
+            "Content-disposition": "attachment;filename=cartas.pdf"
+        }).end(letterData);
+    } catch(e) {
+        result.writeHead(400).end();
+    }
 });
 
 APP.post('/newborns-data/custom', async (request, result) => {
