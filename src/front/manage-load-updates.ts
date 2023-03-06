@@ -5,12 +5,16 @@ import * as utils from "./utils.js";
 export function enableLoadUpdateButtons() {
     $("#btn-create-load").on("click", async e => {
         prepareDefaultDate();
-        setCreateLoadConfirmEnabled(validateLoadCreation());
+        setModalConfirmEnabled($("#btn-create-load-confirm"), validateLoadCreation());
         $("#modal-create-load").modal("show");
     });
     $("#btn-remove-load").on("click", async e => {
         fetchPossibleLoads();
         $("#modal-remove-load").modal("show");
+    });
+    $("#btn-adhoc-registry").on("click", async e => {
+        setModalConfirmEnabled($("#btn-adhoc-registry-confirm"), validateAdHocRegistry());
+        $("#modal-adhoc-registry").modal("show");
     });
 
     $("#btn-create-load-confirm").on("click", async e => {
@@ -26,7 +30,15 @@ export function enableLoadUpdateButtons() {
         removeLoads();
     });
 
-    assignModalCreateLoadEvents();
+    $("#btn-adhoc-registry-confirm").on("click", async e => {
+        if(validateAdHocRegistry()) {
+            utils.displayMessageBox("Datos del registro recibidos", "success");
+        } else {
+            utils.displayMessageBox("Los datos introducidos no son correctos. Por favor revíselos.", "error");
+        }
+    });
+
+    assignModalFocusOutEvents();
 }
 
 
@@ -43,15 +55,15 @@ function prepareDefaultDate() {
 }
 
 
-function assignModalCreateLoadEvents() {
-    $("#selector-create-load-year").on("blur", e => setCreateLoadConfirmEnabled(validateLoadCreation()));
-    $("#selector-create-load-month").on("blur", e => setCreateLoadConfirmEnabled(validateLoadCreation()));
-    $("#selector-create-load-file").on("change", e => setCreateLoadConfirmEnabled(validateLoadCreation()));
+function assignModalFocusOutEvents() {
+    $("#modal-create-load input[type!=file]").on("blur", e => setModalConfirmEnabled($("#btn-create-load-confirm"), validateLoadCreation()));
+    $("#modal-create-load input[type=file]").on("change", e => setModalConfirmEnabled($("#btn-create-load-confirm"), validateLoadCreation()));
+
+    $("#modal-adhoc-registry input").on("blur", e => setModalConfirmEnabled($("#btn-adhoc-registry-confirm"), validateAdHocRegistry()));
 }
 
 
-function setCreateLoadConfirmEnabled(state :boolean) {
-    let button = $("#btn-create-load-confirm")
+function setModalConfirmEnabled(button :JQuery<HTMLElement>, state :boolean) {
     if(state) {
         button.removeClass("disabled");
         button.prop("disabled", false);
@@ -74,6 +86,23 @@ function validateLoadCreation() {
     }
     let selectorFile = $("#selector-create-load-file").val() as string[];
     if(selectorFile.length == 0) {
+        return false;
+    }
+    return true;
+}
+
+
+function validateAdHocRegistry() {
+    if($("#adhoc-newborn-name").val() == "" && $("#adhoc-newborn-surname1").val() == "" && $("#adhoc-newborn-surname2").val() == "") {
+        return false;
+    }
+    if($("#adhoc-newborn-address").val() == "") {
+        return false;
+    }
+    if($("#adhoc-newborn-municipality").val() == "") {
+        return false;
+    }
+    if($("#adhoc-newborn-postalcode").val() == "") {
         return false;
     }
     return true;
