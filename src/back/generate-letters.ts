@@ -2,8 +2,6 @@ import PDF from "pdfkit";
 import { Newborn } from "./db-queries";
 
 
-const LETTER_FILE = "Sobres.pdf";
-
 // Sizes and distances are indicated in points (pt)
 
 export async function generateLettersForNewborns(...newborns :Newborn[]) {
@@ -25,13 +23,21 @@ export async function generateLettersForNewborns(...newborns :Newborn[]) {
         });
 
         let firstPage = true;
+        let skipped = 0;
         for(let newborn of newborns) {
+            if(!newborn.ViviendaDireccion || !newborn.ViviendaCodigoPostal || !newborn.ViviendaNombreMunicipio) {
+                skipped++;
+                continue;
+            }
             if(!firstPage) {
                 // PDFKit documents have 1 page by default. If we were to add a new page for the first newborn, we'd be left with a blank leading page
                 document.addPage();
             }
             generatePage(document, newborn);
             firstPage = false;
+        }
+        if(skipped > 0) {
+            console.log(`Para la carga seleccionada, ${skipped} registros no tienen datos de dirección, código postal, o municipio. No se ha generado sobre para ellos.`);
         }
         document.end();
     });
