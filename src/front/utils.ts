@@ -33,6 +33,24 @@ export function preloadMsgBoxIcons() {
 }
 
 
+export async function downloadLetters() {
+    try {
+        let fetchRequest = await fetch("/newborns-data/letters");
+        if(!fetchRequest.ok) {
+            displayMessageBox("La carga seleccionada está vacía. Es posible que el servidor "
+            + "haya sido reiniciado durante su sesión. Recargue la página e inténtelo de nuevo.", "error");
+        } else {
+            let data = await fetchRequest.blob();
+            displayMessageBox("Se han generado sobres para el último filtro seleccionado o, en su defecto, "
+            + "para la carga más reciente. El archivo debería haberse abierto en otra pestaña.", "success");
+            window.open(window.URL.createObjectURL(data));
+        }
+    } catch(e) {
+        displayMessageBox(`Ha ocurrido un problema al conectar con el servidor.`, "error");
+    }
+}
+
+
 export function getMonthName(id :number) {
     if(id >= 1 && id <= 12) {
         return MONTH_NAMES[id];
@@ -59,7 +77,7 @@ export function* allMonthNames() {
 }
 
 
-export function addsModalButtonKeybinding() {
+export function addModalButtonKeybinding() {
     $(document).on("keypress", e => {
         if(e.key == "Enter") {
             $(".modal:visible input").trigger("blur");
