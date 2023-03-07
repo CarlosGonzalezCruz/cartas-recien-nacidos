@@ -45,10 +45,10 @@ export async function generateLettersForNewborns(...newborns :Newborn[]) {
 
 
 function generatePage(document :PDFKit.PDFDocument, newborn :Newborn) {
-    document.image("assets/ayto-logo.jpg", 2, 2, {width: 116, height: 116});
-    document.image("assets/franqueo-pagado.jpg", 382, 2, {width: 182, height: 74});
+    document.image("assets/ayto-logo.jpg", 2, 2, {width: 108, height: 108});
+    document.image("assets/franqueo-pagado.jpg", 402, 2, {width: 154, height: 64});
 
-    document.fontSize(11);
+    document.fontSize(9);
     document.text(`FAMILIARES DE ${newborn.Nacido_Nombre} ${newborn.Nacido_Apellido1} ${newborn.Nacido_Apellido2}`, 242, 145);
     document.text(newborn.ViviendaDireccion, 242, 163);
     document.text(`${newborn.ViviendaCodigoPostal} ${newborn.ViviendaNombreMunicipio}`, 242, 182);
