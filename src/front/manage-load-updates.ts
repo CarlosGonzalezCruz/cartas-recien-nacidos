@@ -2,6 +2,8 @@ import * as filters from "./manage-filters.js";
 import * as utils from "./utils.js";
 
 
+let loads :{NombreCarga :string}[] = [];
+
 export function enableLoadUpdateButtons() {
     $("#btn-create-load").on("click", async e => {
         prepareDefaultDate();
@@ -9,7 +11,8 @@ export function enableLoadUpdateButtons() {
         $("#modal-create-load").modal("show");
     });
     $("#btn-remove-load").on("click", async e => {
-        fetchPossibleLoads();
+        await fetchPossibleLoads();
+        setModalConfirmEnabled($("#btn-remove-load-confirm"), validateLoadDeletion());
         $("#modal-remove-load").modal("show");
     });
     $("#btn-adhoc-registry").on("click", async e => {
@@ -27,12 +30,18 @@ export function enableLoadUpdateButtons() {
     });
 
     $("#btn-remove-load-confirm").on("click", async e => {
-        removeLoads();
+        if(validateLoadDeletion()) {
+            removeLoads();
+            $("#modal-remove-load").modal("hide");
+        } else {
+            utils.displayMessageBox("La carga introducida no existe. Por favor revise que la ha escrito correctamente.", "error");
+        }
     });
 
     $("#btn-adhoc-registry-confirm").on("click", async e => {
         if(validateAdHocRegistry()) {
-            utils.displayMessageBox("Datos del registro recibidos", "success");
+            createAdHocRegistry();
+            $("#modal-adhoc-registry").modal("hide");
         } else {
             utils.displayMessageBox("Los datos introducidos no son correctos. Por favor revíselos.", "error");
         }
@@ -56,10 +65,11 @@ function prepareDefaultDate() {
 
 
 function assignModalFocusOutEvents() {
-    $("#modal-create-load input[type!=file]").on("blur", e => setModalConfirmEnabled($("#btn-create-load-confirm"), validateLoadCreation()));
+    $("#modal-create-load input[type!=file]").on("input", e => setModalConfirmEnabled($("#btn-create-load-confirm"), validateLoadCreation()));
     $("#modal-create-load input[type=file]").on("change", e => setModalConfirmEnabled($("#btn-create-load-confirm"), validateLoadCreation()));
 
-    $("#modal-adhoc-registry input").on("blur", e => setModalConfirmEnabled($("#btn-adhoc-registry-confirm"), validateAdHocRegistry()));
+    $("#modal-remove-load input").on("input", e => setModalConfirmEnabled($("#btn-remove-load-confirm"), validateLoadDeletion()));
+    $("#modal-adhoc-registry input").on("input", e => setModalConfirmEnabled($("#btn-adhoc-registry-confirm"), validateAdHocRegistry()));
 }
 
 
@@ -92,6 +102,20 @@ function validateLoadCreation() {
 }
 
 
+function validateLoadDeletion() {
+    let value = $("#selector-remove-load").val();
+    if(value == "") {
+        return false;
+    }
+    for(let load of loads) {
+        if(value == load.NombreCarga) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
 function validateAdHocRegistry() {
     if($("#adhoc-newborn-name").val() == "" && $("#adhoc-newborn-surname1").val() == "" && $("#adhoc-newborn-surname2").val() == "") {
         return false;
@@ -113,6 +137,7 @@ async function fetchPossibleLoads() {
     let fetchRequest = await fetch("/newborns-data/loads");
     let data :{"NombreCarga" :string}[] = await fetchRequest.json();
     let sortedLoads = data.sort((a1, a2) => a1.NombreCarga > a2.NombreCarga ? 1 : -1); // Oldest first
+    loads = sortedLoads;
     $("#selector-remove-load-options").empty();
     for(let load of sortedLoads) {
         let option = $(document.createElement("option"));
@@ -133,12 +158,12 @@ async function createLoads() {
 
     try {
         let fetchRequest = await fetch("/newborns-data/loads", fetchInit);
-        let data = await fetchRequest.json();
-        if(data.success) {
-            utils.displayMessageBox(data.msg, "success");
+        let msg = await fetchRequest.text();
+        if(fetchRequest.ok) {
+            utils.displayMessageBox(msg, "success");
             filters.reapplyCurrentFilter();
         } else {
-            utils.displayMessageBox(`No se ha podido crear la carga: ${data.msg}`, "error");
+            utils.displayMessageBox(`No se ha podido crear la carga: ${msg}`, "error");
         }
     } catch(error) {
         utils.displayMessageBox(`Ha ocurrido un problema al conectar con el servidor`, "error");
@@ -159,9 +184,31 @@ async function removeLoads() {
     try {
         let fetchRequest = await fetch("/newborns-data/loads", fetchInit);
         let data = await fetchRequest.json();
-        let count = data.count;
-        utils.displayMessageBox(`Se han eliminado ${count} registros.`, count > 0 ? "success" : "error");
+        utils.displayMessageBox(`Se han eliminado ${data.count} registros.`, data.count > 0 ? "success" : "error");
         filters.reapplyCurrentFilter();
+    } catch(error) {
+        utils.displayMessageBox(`Ha ocurrido un problema al conectar con el servidor`, "error");
+    }
+}
+
+
+async function createAdHocRegistry() {
+    let formData = new FormData($("#form-adhoc-registry").get(0) as HTMLFormElement);
+
+    let fetchInit = {
+        method: "post",
+        body: formData
+    };
+
+    try {
+        let fetchRequest = await fetch("/newborns-data/last-load", fetchInit);
+        if(fetchRequest.ok) {
+            let data = await fetchRequest.json();
+            utils.displayMessageBox(`Se ha creado ${data.count} registro correctamente.`, "success");
+            filters.reapplyCurrentFilter();
+        } else {
+            utils.displayMessageBox(`No se ha podido añadir el registro.`, "error");
+        }
     } catch(error) {
         utils.displayMessageBox(`Ha ocurrido un problema al conectar con el servidor`, "error");
     }

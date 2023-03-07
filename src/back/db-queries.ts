@@ -1,30 +1,40 @@
 import * as db from './db-connection.js';
 
+export const NO_LOADS_ERROR = "No loads";
+
 export type Newborn = {
-    Nacido_Fecha :string,
-    Nacido_Nombre :string,
-    Nacido_Apellido1 :string,
-    Nacido_Apellido2 :string,
-    Padre_Nombre :string,
-    Padre_Apellido1 :string,
-    Padre_Apellido2 :string,
-    Padre_DNI_Extranjero :boolean,
-    Padre_DNI :number,
-    Padre_DNI_Letra :string,
-    Madre_DNI_Extranjero :boolean,
-    Madre_DNI :number,
-    Madre_DNI_Letra :string,
-    NombreCarga :string,
-    AnnoCarga :number,
-    MesCarga :string,
-    IdMesCarga :number,
-    ViviendaDireccion :string,
-    ViviendaCodigoPostal :number,
-    ViviendaNombreMunicipio :string,
-    FechaNacimiento :string,
-    ObservacionesCruce :string,
+    Nacido_Fecha? :string,
+    Nacido_Nombre? :string,
+    Nacido_Apellido1? :string,
+    Nacido_Apellido2? :string,
+    Padre_Nombre? :string,
+    Padre_Apellido1? :string,
+    Padre_Apellido2? :string,
+    Padre_DNI_Extranjero? :boolean,
+    Padre_DNI? :number,
+    Padre_DNI_Letra? :string,
+    Madre_DNI_Extranjero? :boolean,
+    Madre_DNI? :number,
+    Madre_DNI_Letra? :string,
+    NombreCarga? :string,
+    AnnoCarga? :number,
+    MesCarga? :string,
+    IdMesCarga? :number,
+    ViviendaDireccion? :string,
+    ViviendaCodigoPostal? :number,
+    ViviendaNombreMunicipio? :string,
+    FechaNacimiento? :string,
+    ObservacionesCruce? :string,
     [index :string] :any
 }
+
+
+type Load = {
+    NombreCarga :string,
+    MesCarga :string,
+    IdMesCarga :number,
+    AnnoCarga :number
+};
 
 
 export function open() {
@@ -76,13 +86,22 @@ export function getNewbornsWithCustomFilter(...params :[string, string][]) {
 
 
 export async function insertNewborn(loadName :string, ...newborns :Newborn[]) {
-    console.log(`Solicitada la creación de la carga ${loadName}`);
+    console.log(`Solicitada la creación de ${newborns.length} registros en la carga ${loadName}`);
+    if(newborns.length == 0) {
+        return {
+            success: true,
+            count: 0
+        };
+    }
     let query = `
-        INSERT INTO Nacimientos(Nacido_Fecha, Nacido_Nombre, Nacido_Apellido1, Nacido_Apellido2, Padre_Nombre, Padre_Apellido1, Padre_Apellido2, Padre_DNI_Extranjero, Padre_DNI, Padre_DNI_Letra, Madre_Nombre, Madre_Apellido1, Madre_Apellido2, Madre_DNI_Extranjero, Madre_DNI, Madre_DNI_Letra, NombreCarga, AnnoCarga, MesCarga, IdMesCarga, ViviendaDireccion, ViviendaCodigoPostal, ViviendaNombreMunicipio, FechaNacimiento, ObservacionesCruce) VALUES
+        INSERT INTO Nacimientos(${Object.keys(newborns[0]).join(",")}) VALUES
     `;
     let query_rows :string[] = [];
     for(let entry of newborns) {
-        let fields = Array.from(Object.keys(entry), key => typeof entry[key] == "string" ? `"${entry[key]}"` : entry[key]);
+        let fields = Array.from(Object.keys(entry), key => 
+            typeof entry[key] == "string" ? `"${entry[key].toUpperCase()}"` :
+            entry[key] == null ? "NULL" :
+            entry[key]);
         query_rows.push("(" + fields.join(",") + ")");
     }
     query = query + query_rows.join(",") + ";"
@@ -104,13 +123,45 @@ export async function insertNewborn(loadName :string, ...newborns :Newborn[]) {
 }
 
 
-export function getDistinctLoads() {
+export async function insertNewbornForLatestLoad(...newborns :Newborn[]) {
+    let latestLoad = await getLatestLoad();
+    if(latestLoad == null) {
+        console.error(`No se puede insertar el registro porque no hay "última carga"`);
+        throw NO_LOADS_ERROR;
+    }
+
+    for(let entry of newborns) {
+        entry.NombreCarga = latestLoad.NombreCarga;
+        entry.MesCarga = latestLoad.MesCarga;
+        entry.IdMesCarga = latestLoad.IdMesCarga;
+        entry.AnnoCarga = latestLoad.AnnoCarga;
+    }
+    return insertNewborn(latestLoad.NombreCarga, ...newborns);
+}
+
+
+export async function getDistinctLoads() {
     return db.performQuery(
         `
             SELECT DISTINCT(NombreCarga) FROM Nacimientos;
         `
     );
 }
+
+
+export async function getLatestLoad() {
+    let query = await db.performQuery(
+        `
+            SELECT NombreCarga, MesCarga, IdMesCarga, MAX(AnnoCarga) AS AnnoCarga FROM Nacimientos WHERE IdMesCarga =
+            (SELECT MAX(IdMesCarga) FROM Nacimientos WHERE AnnoCarga = (SELECT MAX(AnnoCarga) FROM Nacimientos));
+        `
+    );
+    if(query.length == 0) {
+        return null;
+    }
+    return query[0] as Load;
+}
+
 
 export async function isLoadPresent(loadName :string) {
     let rows = await db.performQuery(
@@ -138,4 +189,32 @@ export async function lastOperationAmountOfRowsUpdated() {
         `
     ) as {COUNT :number}[];
     return query[0].COUNT;
+}
+
+
+function getEmptyNewbornObject() {
+    return {
+        Nacido_Fecha: undefined,
+        Nacido_Nombre: undefined,
+        Nacido_Apellido1: undefined,
+        Nacido_Apellido2: undefined,
+        Padre_Nombre: undefined,
+        Padre_Apellido1: undefined,
+        Padre_Apellido2: undefined,
+        Padre_DNI_Extranjero: undefined,
+        Padre_DNI: undefined,
+        Padre_DNI_Letra: undefined,
+        Madre_DNI_Extranjero: undefined,
+        Madre_DNI: undefined,
+        Madre_DNI_Letra: undefined,
+        NombreCarga: undefined,
+        AnnoCarga: undefined,
+        MesCarga: undefined,
+        IdMesCarga: undefined,
+        ViviendaDireccion: undefined,
+        ViviendaCodigoPostal: undefined,
+        ViviendaNombreMunicipio: undefined,
+        FechaNacimiento :undefined,
+        ObservacionesCruce :undefined
+    } as Newborn;
 }
