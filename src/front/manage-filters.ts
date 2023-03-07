@@ -4,6 +4,8 @@ import * as utils from "./utils.js";
 
 let filterButtons = $("#filters-panel .btn");
 let currentFilterButton :JQuery<HTMLElement>;
+let currentFilterPath :string;
+let currentFilterParameters :any;
 
 
 export function enableFilterButtons() {
@@ -31,12 +33,14 @@ export function enableFilterButtons() {
 
 export function applyDefaultFilter() {
     currentFilterButton = $("#btn-filter-last-load");
-    populateWithDataFetchedFrom("newborns-data/last-load", $("#btn-filter-last-load"));
+    currentFilterPath = "newborns-data/last-load";
+    currentFilterParameters = null;
+    populateWithDataFetchedFrom(currentFilterPath, currentFilterButton);
 }
 
 
 export function reapplyCurrentFilter() {
-    currentFilterButton.trigger("click");
+    populateWithDataFetchedFrom(currentFilterPath, currentFilterButton, currentFilterParameters);
 }
 
 
@@ -53,6 +57,8 @@ async function populateWithDataFetchedFrom(path :string, button :JQuery<HTMLElem
     button.removeClass("btn-inactive");
     button.addClass("btn-active");
     currentFilterButton = button;
+    currentFilterPath = path;
+    currentFilterParameters = postBody;
 
     let fetchInit = postBody == null ?
     {

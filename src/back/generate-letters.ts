@@ -50,6 +50,6 @@ function generatePage(document :PDFKit.PDFDocument, newborn :Newborn) {
 
     document.fontSize(9);
     document.text(`FAMILIARES DE ${newborn.Nacido_Nombre} ${newborn.Nacido_Apellido1} ${newborn.Nacido_Apellido2}`, 242, 145);
-    document.text(newborn.ViviendaDireccion, 242, 163);
+    document.text(`${newborn.ViviendaDireccion}`, 242, 163);
     document.text(`${newborn.ViviendaCodigoPostal} ${newborn.ViviendaNombreMunicipio}`, 242, 182);
 }

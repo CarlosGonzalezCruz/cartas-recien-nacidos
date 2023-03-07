@@ -21,35 +21,34 @@ export async function createLoads(year :string | number, month :string, file :Up
     }
 
     let newborns :db.Newborn[] = []
-    // This creation of data is provisional
-    for(let newborn of readFileEntries(file)) {
-        newborns.push({
-            "Nacido_Fecha": newborn.Nacido_Fecha,
-            "Nacido_Nombre": newborn.Nacido_Nombre,
-            "Nacido_Apellido1": newborn.Nacido_Apellido1,
-            "Nacido_Apellido2": newborn.Nacido_Apellido2,
-            "Padre_Nombre": newborn.Padre_Nombre,
-            "Padre_Apellido1": newborn.Padre_Apellido1,
-            "Padre_Apellido2": newborn.Padre_Apellido2,
-            "Padre_DNI_Extranjero": newborn.Padre_DNI_Extranjero == '1',
-            "Padre_DNI": Number(newborn.Padre_DNI),
-            "Padre_DNI_Letra": newborn.Padre_DNI_Letra,
-            "Madre_Nombre": newborn.Madre_Nombre,
-            "Madre_Apellido1": newborn.Madre_Apellido1,
-            "Madre_Apellido2": newborn.Madre_Apellido2,
-            "Madre_DNI_Extranjero": newborn.Madre_DNI_Extranjero == '1',
-            "Madre_DNI": Number(newborn.Madre_DNI),
-            "Madre_DNI_Letra": newborn.Madre_DNI_Letra,
-            "NombreCarga": loadName,
-            "AnnoCarga": Number(year),
-            "MesCarga": month,
-            "IdMesCarga": getMonthId(month),
-            "ViviendaDireccion": stringifyAddress(newborn.Padre_ViviendaDireccion),
-            "ViviendaCodigoPostal": Number(newborn.Padre_ViviendaCodigoPostal),
-            "ViviendaNombreMunicipio": "ALCALA DE HENARES",
-            "FechaNacimiento": newborn.Nacido_Fecha,
-            "ObservacionesCruce": "Dirección del padre escogida provisionalmente."
-        });
+
+    for(let dbNewbornData of readFileEntries(file)) {
+        let newborn = {
+            Nacido_Fecha: dbNewbornData.Nacido_Fecha,
+            Nacido_Nombre: dbNewbornData.Nacido_Nombre,
+            Nacido_Apellido1: dbNewbornData.Nacido_Apellido1,
+            Nacido_Apellido2: dbNewbornData.Nacido_Apellido2,
+            Padre_Nombre: dbNewbornData.Padre_Nombre,
+            Padre_Apellido1: dbNewbornData.Padre_Apellido1,
+            Padre_Apellido2: dbNewbornData.Padre_Apellido2,
+            Padre_DNI_Extranjero: dbNewbornData.Padre_DNI_Extranjero == '1',
+            Padre_DNI: Number(dbNewbornData.Padre_DNI),
+            Padre_DNI_Letra: dbNewbornData.Padre_DNI_Letra,
+            Madre_Nombre: dbNewbornData.Madre_Nombre,
+            Madre_Apellido1: dbNewbornData.Madre_Apellido1,
+            Madre_Apellido2: dbNewbornData.Madre_Apellido2,
+            Madre_DNI_Extranjero: dbNewbornData.Madre_DNI_Extranjero == '1',
+            Madre_DNI: Number(dbNewbornData.Madre_DNI),
+            Madre_DNI_Letra: dbNewbornData.Madre_DNI_Letra,
+            NombreCarga: loadName,
+            AnnoCarga: Number(year),
+            MesCarga: month,
+            IdMesCarga: getMonthId(month),
+            ViviendaNombreMunicipio: "ALCALA DE HENARES"
+        } as db.Newborn;
+
+        pickAddress(dbNewbornData, newborn);
+        newborns.push(newborn);
     }
 
     let result = await db.insertNewborn(loadName, ...newborns);
@@ -116,7 +115,7 @@ function getMonthId(name :string) {
     if(selectedId != -1) {
         return selectedId;
     } else {
-        throw new RangeError(`No such month name: ${name}`);
+        throw new RangeError(`No existe el mes ${name}`);
     }
 }
 
@@ -132,6 +131,24 @@ function enforceTwoDigits(value :number) {
 
 function stringifyAddress(address :{TipoVia :string, NombreVia :string, Numero :string, Linea2 :string}) {
     return `${address.TipoVia} ${address.NombreVia}           , Nº ${address.Numero}, ${address.Linea2}`;
+}
+
+
+function pickAddress(db_entry :any, newborn :db.Newborn) {
+    newborn.ObservacionesCruce = "";
+    if(db_entry.Nacido_Fecha == null) {
+        newborn.ObservacionesCruce += `Fecha de nacimiento nula. Ni se intenta el cruce (es un criterio básico para cruzar). `;
+    } else if(db_entry.Madre_ViviendaDireccion && db_entry.Madre_ViviendaCodigoPostal) {
+        newborn.ViviendaDireccion = stringifyAddress(db_entry.Madre_ViviendaDireccion);
+        newborn.ViviendaCodigoPostal = Number(db_entry.Madre_ViviendaCodigoPostal);
+        newborn.ObservacionesCruce += `Dirección cruzada por madre. `;
+    } else if(db_entry.Padre_ViviendaDireccion && db_entry.Padre_ViviendaCodigoPostal) {
+        newborn.ViviendaDireccion = stringifyAddress(db_entry.Padre_ViviendaDireccion);
+        newborn.ViviendaCodigoPostal = Number(db_entry.Padre_ViviendaCodigoPostal);
+        newborn.ObservacionesCruce += `Dirección cruzada por padre. `;
+    } else {
+        newborn.ObservacionesCruce += `Dirección de los padres no encontrada, o hijo/a no vive allí. `;
+    }
 }
 
 
