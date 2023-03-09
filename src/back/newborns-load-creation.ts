@@ -1,6 +1,7 @@
 import fs from "fs";
 import PersistentFile from "formidable/PersistentFile.js";
 import * as db from "./db-queries.js";
+import * as properties from "./properties.js";
 
 type LoadCreationResult = {
     success :boolean,
@@ -71,41 +72,50 @@ async function generateLoadName(year :string | number, month :string) {
 
 
 function* readFileEntries(file :UploadedFile) {
-    let data = fs.readFileSync(file.filepath, "latin1");
-    // Substring removes the last \n. Without it, a final empty row would be added with every insert query.
-    for(let row of data.substring(0, data.length - 1).split("\n")) {
-        yield {
-            Nacido_Fecha: row.substring(26, 34).trim(),
-            Nacido_Nombre: row.substring(34, 54).trim(),
-            Nacido_Apellido1: row.substring(54, 79).trim(),
-            Nacido_Apellido2: row.substring(79, 104).trim(),
-            Padre_Nombre: row.substring(105, 125).trim(),
-            Padre_Apellido1: row.substring(125, 150).trim(),
-            Padre_Apellido2: row.substring(150, 175).trim(),
-            Padre_DNI_Extranjero: row.substring(176, 177).trim(),
-            Padre_DNI: row.substring(177, 185).trim(),
-            Padre_DNI_Letra: row.substring(185, 186).trim(),
-            Padre_ViviendaDireccion: {
-                TipoVia: row.substring(194, 199).trim(),
-                NombreVia: row.substring(199, 249).trim(),
-                Numero: row.substring(249, 254).trim(),
-                Linea2: row.substring(254, 263).trim(),
-            },
-            Padre_ViviendaCodigoPostal: row.substring(263, 268).trim(),
-            Madre_Nombre: row.substring(268, 288).trim(),
-            Madre_Apellido1: row.substring(288, 313).trim(),
-            Madre_Apellido2: row.substring(313, 338).trim(),
-            Madre_DNI_Extranjero: row.substring(339, 340).trim(),
-            Madre_DNI: row.substring(340, 348).trim(),
-            Madre_DNI_Letra: row.substring(348, 349).trim(),
-            Madre_ViviendaDireccion: {
-                TipoVia: row.substring(357, 362).trim(),
-                NombreVia: row.substring(362, 412).trim(),
-                Numero: row.substring(412, 417).trim(),
-                Linea2: row.substring(417, 426).trim(),
-            },
-            Madre_ViviendaCodigoPostal: row.substring(426, 431).trim()
+    let data :string;
+    try {
+        data = fs.readFileSync(file.filepath, properties.get<BufferEncoding>("Application.load-encoding"));
+    } catch(e) {
+        throw new Error("No se ha podido abrir el archivo de la carga. ¿Es correcto el valor de la propiedad [Application] load-encoding?");
+    }
+    try {
+        // Substring removes the last \n. Without it, a final empty row would be added with every insert query.
+        for(let row of data.substring(0, data.length - 1).split("\n")) {
+            yield {
+                Nacido_Fecha: row.substring(26, 34).trim(),
+                Nacido_Nombre: row.substring(34, 54).trim(),
+                Nacido_Apellido1: row.substring(54, 79).trim(),
+                Nacido_Apellido2: row.substring(79, 104).trim(),
+                Padre_Nombre: row.substring(105, 125).trim(),
+                Padre_Apellido1: row.substring(125, 150).trim(),
+                Padre_Apellido2: row.substring(150, 175).trim(),
+                Padre_DNI_Extranjero: row.substring(176, 177).trim(),
+                Padre_DNI: row.substring(177, 185).trim(),
+                Padre_DNI_Letra: row.substring(185, 186).trim(),
+                Padre_ViviendaDireccion: {
+                    TipoVia: row.substring(194, 199).trim(),
+                    NombreVia: row.substring(199, 249).trim(),
+                    Numero: row.substring(249, 254).trim(),
+                    Linea2: row.substring(254, 263).trim(),
+                },
+                Padre_ViviendaCodigoPostal: row.substring(263, 268).trim(),
+                Madre_Nombre: row.substring(268, 288).trim(),
+                Madre_Apellido1: row.substring(288, 313).trim(),
+                Madre_Apellido2: row.substring(313, 338).trim(),
+                Madre_DNI_Extranjero: row.substring(339, 340).trim(),
+                Madre_DNI: row.substring(340, 348).trim(),
+                Madre_DNI_Letra: row.substring(348, 349).trim(),
+                Madre_ViviendaDireccion: {
+                    TipoVia: row.substring(357, 362).trim(),
+                    NombreVia: row.substring(362, 412).trim(),
+                    Numero: row.substring(412, 417).trim(),
+                    Linea2: row.substring(417, 426).trim(),
+                },
+                Madre_ViviendaCodigoPostal: row.substring(426, 431).trim()
+            }
         }
+    } catch(e) {
+        throw new Error("Ha ocurrido un problema al leer el archivo de la carga.");
     }
 }
 
@@ -130,7 +140,7 @@ function enforceTwoDigits(value :number) {
 
 
 function stringifyAddress(address :{TipoVia :string, NombreVia :string, Numero :string, Linea2 :string}) {
-    return `${address.TipoVia} ${address.NombreVia}           , Nº ${address.Numero}, ${address.Linea2}`;
+    return `${address.TipoVia} ${address.NombreVia}, ${address.Numero}, ${address.Linea2}`;
 }
 
 
