@@ -41,8 +41,8 @@ export function open() {
     return db.open();
 }
 
-export function close() {
-    db.close();
+export async function close() {
+    await db.close();
 }
 
 export async function getNewbornsFromLastLoad(): Promise<readonly Newborn[]> {

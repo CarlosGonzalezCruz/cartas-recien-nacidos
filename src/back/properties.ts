@@ -38,8 +38,18 @@ export function initProperties() {
 }
 
 
-export function get<T extends PropertiesReader.Value>(key :string) {
-    return properties.get(key) as T;
+export function get<T extends PropertiesReader.Value>(key :string, defaultValue? :T) {
+    let ret = properties.get(key) as T | null;
+    if(ret == null) {
+        if(defaultValue != undefined) {
+            return defaultValue;
+        } else {
+            let split = key.split(".");
+            let display = split.length <= 1 ? split[0] : `[${split[0]}] ${split.slice(1).join(".")}`;
+            throw new Error(`La propiedad ${display} no se ha encontrado o no tiene ningún valor. Asegúrese de que coinciden mayúsculas y minúsculas.`);
+        }
+    }
+    return ret;
 }
 
 

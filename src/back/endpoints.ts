@@ -13,15 +13,15 @@ const STATUS_OK = 200;
 const STATUS_CONFLICT = 409;
 const STATUS_UNHANDLED_ERROR = 500;
 
-export function listen(port :number) {
-    db.open();
+export async function listen(port :number) {
+    await db.open();
     APP.listen(port, () => {
         console.log(`Atendiendo al puerto ${port}...`);
     });
 }
 
-process.on("SIGINT", () => {
-    db.close();
+process.on("SIGINT", async () => {
+    await db.close();
     console.log("Hasta luego");
     process.exit();
 });
