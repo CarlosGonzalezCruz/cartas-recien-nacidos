@@ -45,8 +45,8 @@
                     <!-- Intentionally empty filler -->
                 </div>
             </div>
-            <div class="row h-20">
-                <div class="col-md-6 d-flex flex-column">
+            <div class="row">
+                <div class="col-md-5 d-flex flex-column">
                     <div class="option-panel h-100 p-2">
                         <div class="row d-flex justify-content-center">
                             <h5>Filtro aplicado</h5>
@@ -57,38 +57,56 @@
                                 <div id="btn-filter-all" class="btn btn-inactive my-1">Mostrar todos</div>
                                 <div id="btn-filter-address-only" class="btn btn-inactive my-1">Mostrar sólo con dirección</div>
                             </div>
-                            <div class="col-sm-3 d-flex flex-column">
+                            <div class="col-sm-3 d-flex flex-column pl-sm-0">
                                 <div id="btn-filter-custom" class="btn btn-inactive my-1 h-100 d-flex justify-content-center">
                                     <img src="icons/funnel.svg" type="image/svg" class="w-100 d-none d-md-block">
                                     <img src="icons/funnel.svg" type="image/svg" class="d-inline d-md-none">
-                                    <span class="d-md-none">Filtro personalizado</span>
+                                    <span class="d-md-none ml-1">Filtro personalizado</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6 d-flex flex-column">
-                    <div class="option-panel p-2">
+                <div class="col-md-4 d-flex flex-column">
+                    <div class="option-panel p-2 h-100">
                         <div class="row d-flex justify-content-center">
                             <h5>Cargas</h5>
                         </div>
-                        <div class="row">
-                            <div class="col-md-4 d-flex flex-column">
-                                <div id="btn-create-load" class="btn bg-green my-1 h-100 d-flex justify-content-center">
+
+                        <div class="d-flex flex-column">
+                            <div class="w-100">
+                                <div id="btn-create-load" class="btn bg-green my-1 d-flex justify-content-center">
                                     <img src="icons/file-earmark-plus.svg" type="image/svg" class="svg-inverted-color">
-                                    Nueva carga
+                                    <span class="ml-1">Nueva carga</span>
                                 </div>
                             </div>
-                            <div class="col-md-4 d-flex flex-column">
-                                <div id="btn-remove-load" class="btn bg-red my-1 h-100 d-flex justify-content-center">
+                            <div class="w-100">
+                                <div id="btn-remove-load" class="btn bg-red my-1 d-flex justify-content-center">
                                     <img src="icons/file-earmark-x.svg" type="image/svg" class="svg-inverted-color">
-                                    Eliminar carga
+                                    <span class="ml-1">Eliminar carga</span>
                                 </div>
                             </div>
-                            <div class="col-md-4 d-flex flex-column">
+                            <div class="w-100">
                                 <div id="btn-adhoc-registry" class="btn btn-inactive my-1 h-100 d-flex justify-content-center">
                                     <img src="icons/person-add.svg" type="image/svg" class="svg-inverted-color">
-                                    Registro&nbsp<i>ad hoc</i>
+                                    <span class="ml-1">Registro&nbsp<i>ad hoc</i></span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="col-md-3 d-flex flex-column">
+                    <div class="option-panel p-2 h-100">
+                        <div class="row d-flex justify-content-center">
+                            <h5>Sobres</h5>
+                        </div>
+                        <div class="row d-flex flex-column">
+                            <div class="col-12 w-100 d-flex flex-column">
+                                <div id="btn-generate-pdf" class="btn btn-inactive my-1 h-100 d-flex justify-content-center">
+                                    <img src="icons/envelope.svg" type="image/svg" class="w-50 d-none d-md-block">
+                                    <img src="icons/envelope.svg" type="image/svg" class="d-inline d-md-none">
+                                    <span class="d-md-none ml-1">Generar PDF</span>
                                 </div>
                             </div>
                         </div>

@@ -6,6 +6,7 @@ filters.enableFilterButtons();
 filters.applyDefaultFilter();
 
 updates.enableLoadUpdateButtons();
+$("#btn-generate-pdf").on("click", utils.downloadLetters);
 
-utils.addsModalButtonKeybinding();
+utils.addModalButtonKeybinding();
 utils.preloadMsgBoxIcons();

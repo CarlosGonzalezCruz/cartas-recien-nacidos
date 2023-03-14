@@ -36,6 +36,7 @@ type Load = {
     AnnoCarga :number
 };
 
+let lastFilterQueryResult :Newborn[] = [];
 
 export function open() {
     return db.open();
@@ -45,25 +46,31 @@ export function close() {
     db.close();
 }
 
-export function getNewbornsFromLastLoad() {
-    return db.performQuery(`
+export async function getNewbornsFromLastLoad(): Promise<readonly Newborn[]> {
+    let result = await db.performQuery(`
         SELECT * FROM Nacimientos WHERE AnnoCarga = (SELECT MAX(AnnoCarga) FROM Nacimientos)
         AND IdMesCarga = (SELECT MAX(IdMesCarga) FROM Nacimientos WHERE AnnoCarga = (SELECT MAX(AnnoCarga) FROM Nacimientos))
         ORDER BY NombreCarga DESC, ViviendaCodigoPostal, ViviendaDireccion, Nacido_Nombre, Nacido_Apellido1, Nacido_Apellido2
-    `) as Promise<Newborn[]>;
+    `) as Newborn[];
+    lastFilterQueryResult = result;
+    return result;
 }
 
-export function getAllNewborns() {
-    return db.performQuery(`
-        SELECT * FROM Nacimientos ORDER BY NombreCarga DESC,  ViviendaCodigoPostal, ViviendaDireccion, Nacido_Nombre, Nacido_Apellido1, Nacido_Apellido2
-    `) as Promise<Newborn[]>;
+export async function getAllNewborns(): Promise<readonly Newborn[]> {
+    let result = await db.performQuery(`
+        SELECT * FROM Nacimientos ORDER BY NombreCarga DESC, ViviendaCodigoPostal, ViviendaDireccion, Nacido_Nombre, Nacido_Apellido1, Nacido_Apellido2
+    `) as Newborn[];
+    lastFilterQueryResult = result;
+    return result;
 }
 
-export function getNewbornsWithAddressOnly() {
-    return db.performQuery(`
+export async function getNewbornsWithAddressOnly(): Promise<readonly Newborn[]> {
+    let result = await db.performQuery(`
         SELECT * FROM Nacimientos WHERE ViviendaDireccion Is Not Null
         ORDER BY NombreCarga DESC, ViviendaCodigoPostal, ViviendaDireccion, Nacido_Nombre, Nacido_Apellido1, Nacido_Apellido2
-    `) as Promise<Newborn[]>;
+    `) as Newborn[];
+    lastFilterQueryResult = result;
+    return result;
 }
 
 export function getLastInsertedNewborn() {
@@ -79,7 +86,7 @@ export function getNewbornsWithIds(...id :(string | number)[]) {
     `) as Promise<Newborn[]>;
 }
 
-export function getNewbornsWithCustomFilter(...params :[string, string][]) {
+export async function getNewbornsWithCustomFilter(...params :[string, string][]) {
     let conditions = [];
     for(let p of params) {
         if(!!p[0] && !!p[1]) { // Neither string is null, undefined, or empty
@@ -88,15 +95,20 @@ export function getNewbornsWithCustomFilter(...params :[string, string][]) {
     }
     let condition = conditions.join(" AND ");
     if(!!condition) {
-        return db.performQuery(`
+        let result = await db.performQuery(`
             SELECT * FROM Nacimientos WHERE ${condition}
             ORDER BY NombreCarga DESC, ViviendaCodigoPostal, ViviendaDireccion, Nacido_Nombre, Nacido_Apellido1, Nacido_Apellido2
-        `) as Promise<Newborn[]>;    
+        `) as Newborn[];
+        lastFilterQueryResult = result;
+        return result;    
     } else {
         return getAllNewborns();
     }
 }
 
+export function getLastFilterQueryResult() :readonly Newborn[] {
+    return lastFilterQueryResult;
+}
 
 export async function insertNewborn(loadName :string, ...newborns :Newborn[]) {
     console.log(`Solicitada la creación de ${newborns.length} registros en la carga ${loadName}`);

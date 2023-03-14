@@ -93,6 +93,7 @@ async function populateWithDataFetchedFrom(path :string, button :JQuery<HTMLElem
         $("#newborns-table-body :checkbox").on("change", async e => {
             recalculateSelectAllCheckbox();
         });
+        recalculateSelectAllCheckbox();
     } catch(error) {
         utils.displayMessageBox("Ha ocurrido un problema al conectar con el servidor.", "error");
     }
