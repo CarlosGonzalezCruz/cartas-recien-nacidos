@@ -1,4 +1,5 @@
 import OracleDB from "oracledb";
+import MySQL from "mysql";
 import sqlite3 from "sqlite3";
 import * as properties from "./properties.js";
 
@@ -6,6 +7,7 @@ import * as properties from "./properties.js";
 const DB_PATH = "./db/nacimientos";
 let sqlite3db :sqlite3.Database;
 let oracledb :OracleDB.Connection;
+let mysqldb :MySQL.Connection;
 
 
 export async function open() {
@@ -19,7 +21,7 @@ export async function open() {
         resolve(sqlite3db);
     }) as Promise<sqlite3.Database>;
 
-    await Promise.all([sqlite3connection, establishOracleDBConnection()]);
+    await Promise.all([sqlite3connection, establishOracleDBConnection(), establishMySQLConnection()]);
     console.log("Todas las conexiones listas.");
 }
 
@@ -57,7 +59,48 @@ async function establishOracleDBConnection() {
         });
         console.log(`Conexión establecida con Oracle DB en ${properties.get("Oracle.host")}:${properties.get("Oracle.port")} como ${properties.get("Oracle.username")}.`);
     } catch(e) {
-        throw new Error(`No se ha podido establecer la conexión con Oracle DB. Causa: ${e}`);
+        throw new Error(`No se ha podido establecer la conexión con Oracle DB en ${properties.get("Oracle.host")}:${properties.get("Oracle.port")} como ${properties.get("Oracle.username")}. Causa: ${e}`);
+    }
+    try {
+        // Trivial query to verify whether Oracle DB is resolving queries at all
+        console.log("Probando a realizar una consulta trivial con Oracle DB...");
+        await ret.execute("SELECT COUNT(1) FROM ALL_TABLES");
+        console.log("Consulta resuelta con Oracle DB.");
+    } catch(e) {
+        throw new Error(`Oracle DB no está resolviendo consultas. Causa: ${e}`);
     }
     return ret;
+}
+
+
+async function establishMySQLConnection() {
+    let ret = MySQL.createConnection({
+        host: properties.get<string>("MySQL.host"),
+        port: properties.get<number>("MySQL.port"),
+        user: properties.get<string>("MySQL.username"),
+        password: properties.get<string>("MySQL.password")
+    });
+    return new Promise<MySQL.Connection>((resolve, reject) => {
+        ret.connect(error => {
+            if(error) {
+                throw new Error(`No se ha podido establecer la conexión con MySQL en ${properties.get("MySQL.host")}:${properties.get("MySQL.port")} como ${properties.get("MySQL.username")}. Causa: ${error}`);
+            } else {
+                console.log(`Conexión establecida con MySQL en ${properties.get("MySQL.host")}:${properties.get("MySQL.port")} como ${properties.get("MySQL.username")}.`);
+                resolve(ret);
+            }
+        });
+    }).then(con => new Promise<MySQL.Connection>((resolve, reject) => {
+            // Trivial query to verify whether MySQL is resolving queries at all
+            console.log("Probando a realizar una consulta trivial con MySQL...");
+            con.query("SELECT 1", (error, result) => {
+                if(error) {
+                    throw new Error(`MySQL no está resolviendo consultas. Causa: ${error}`);
+                } else {
+                    console.log("Consulta resuelta con MySQL.");
+                    mysqldb = con;
+                    resolve(con);
+                }
+            });
+        })
+    );
 }
