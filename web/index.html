@@ -19,6 +19,7 @@
                 <table class="table table-striped">
                     <thead class="thead-dark">
                         <tr>
+                            <th><input type="checkbox" id="select-all-newborns" checked="checked"></th>
                             <th>Carga</th>
                             <th>Nacimiento</th>
                             <th>Nombre y apellidos</th>
@@ -29,6 +30,7 @@
                     </thead>
                     <tbody id="newborns-table-body">
                         <tr id="newborns-row-template" class="jquery-hidden">
+                            <td><input type="checkbox" id="select-newborn-{{Id}}" checked="checked"></td>
                             <td>{{NombreCarga}}</td>
                             <td>{{Nacido_Fecha}}</td>
                             <td>{{Nacido_Apellido1}} {{Nacido_Apellido2}}, {{Nacido_Nombre}}</td>

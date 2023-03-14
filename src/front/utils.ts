@@ -33,6 +33,13 @@ export function preloadMsgBoxIcons() {
 }
 
 
+export function documentReady() {
+    return new Promise<void>(resolve => {
+        jQuery(resolve);
+    });
+}
+
+
 export function getMonthName(id :number) {
     if(id >= 1 && id <= 12) {
         return MONTH_NAMES[id];
@@ -66,4 +73,13 @@ export function addsModalButtonKeybinding() {
             $(".modal:visible .modal-footer .btn:last-child").get(0)?.click();
         }
     });
+}
+
+
+export function getSelectedNewbornIds() {
+    let ret :string[] = [];
+    $("#newborns-table-body tr").has(":checkbox:checked").each(function() {
+        ret.push($(this).attr("newborn-id") as string);
+    })
+    return ret;
 }

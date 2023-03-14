@@ -37,6 +37,10 @@ APP.get('/newborns-data/last-load', async (request, result) => {
     result.send(await db.getNewbornsFromLastLoad());
 });
 
+APP.get('/newborns-data/last-inserted', async (request, result) => {
+    result.send(await db.getLastInsertedNewborn());
+})
+
 APP.get('/newborns-data/all', async (request, result) => {
     result.send(await db.getAllNewborns());
 });

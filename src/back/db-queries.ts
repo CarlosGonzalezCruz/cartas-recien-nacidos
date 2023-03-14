@@ -49,20 +49,33 @@ export function getNewbornsFromLastLoad() {
     return db.performQuery(`
         SELECT * FROM Nacimientos WHERE AnnoCarga = (SELECT MAX(AnnoCarga) FROM Nacimientos)
         AND IdMesCarga = (SELECT MAX(IdMesCarga) FROM Nacimientos WHERE AnnoCarga = (SELECT MAX(AnnoCarga) FROM Nacimientos))
-        ORDER BY NombreCarga DESC, Nacido_Nombre, Nacido_Apellido1, Nacido_Apellido2
+        ORDER BY NombreCarga DESC, ViviendaCodigoPostal, ViviendaDireccion, Nacido_Nombre, Nacido_Apellido1, Nacido_Apellido2
     `) as Promise<Newborn[]>;
 }
 
 export function getAllNewborns() {
     return db.performQuery(`
-        SELECT * FROM Nacimientos ORDER BY NombreCarga DESC, Nacido_Nombre, Nacido_Apellido1, Nacido_Apellido2
+        SELECT * FROM Nacimientos ORDER BY NombreCarga DESC,  ViviendaCodigoPostal, ViviendaDireccion, Nacido_Nombre, Nacido_Apellido1, Nacido_Apellido2
     `) as Promise<Newborn[]>;
 }
 
 export function getNewbornsWithAddressOnly() {
     return db.performQuery(`
         SELECT * FROM Nacimientos WHERE ViviendaDireccion Is Not Null
-        ORDER BY NombreCarga DESC, Nacido_Nombre, Nacido_Apellido1, Nacido_Apellido2
+        ORDER BY NombreCarga DESC, ViviendaCodigoPostal, ViviendaDireccion, Nacido_Nombre, Nacido_Apellido1, Nacido_Apellido2
+    `) as Promise<Newborn[]>;
+}
+
+export function getLastInsertedNewborn() {
+    return db.performQuery(`
+        SELECT * FROM Nacimientos WHERE Id = (SELECT LAST_INSERT_ROWID())
+    `) as Promise<Newborn[]>;
+}
+
+export function getNewbornsWithIds(...id :(string | number)[]) {
+    return db.performQuery(`
+        SELECT * FROM Nacimientos WHERE Id IN (${id.join(",")})
+        ORDER BY NombreCarga DESC, ViviendaCodigoPostal, ViviendaDireccion, Nacido_Nombre, Nacido_Apellido1, Nacido_Apellido2
     `) as Promise<Newborn[]>;
 }
 
@@ -77,7 +90,7 @@ export function getNewbornsWithCustomFilter(...params :[string, string][]) {
     if(!!condition) {
         return db.performQuery(`
             SELECT * FROM Nacimientos WHERE ${condition}
-            ORDER BY NombreCarga DESC, Nacido_Nombre, Nacido_Apellido1, Nacido_Apellido2
+            ORDER BY NombreCarga DESC, ViviendaCodigoPostal, ViviendaDireccion, Nacido_Nombre, Nacido_Apellido1, Nacido_Apellido2
         `) as Promise<Newborn[]>;    
     } else {
         return getAllNewborns();
@@ -189,32 +202,4 @@ export async function lastOperationAmountOfRowsUpdated() {
         `
     ) as {COUNT :number}[];
     return query[0].COUNT;
-}
-
-
-function getEmptyNewbornObject() {
-    return {
-        Nacido_Fecha: undefined,
-        Nacido_Nombre: undefined,
-        Nacido_Apellido1: undefined,
-        Nacido_Apellido2: undefined,
-        Padre_Nombre: undefined,
-        Padre_Apellido1: undefined,
-        Padre_Apellido2: undefined,
-        Padre_DNI_Extranjero: undefined,
-        Padre_DNI: undefined,
-        Padre_DNI_Letra: undefined,
-        Madre_DNI_Extranjero: undefined,
-        Madre_DNI: undefined,
-        Madre_DNI_Letra: undefined,
-        NombreCarga: undefined,
-        AnnoCarga: undefined,
-        MesCarga: undefined,
-        IdMesCarga: undefined,
-        ViviendaDireccion: undefined,
-        ViviendaCodigoPostal: undefined,
-        ViviendaNombreMunicipio: undefined,
-        FechaNacimiento :undefined,
-        ObservacionesCruce :undefined
-    } as Newborn;
 }
