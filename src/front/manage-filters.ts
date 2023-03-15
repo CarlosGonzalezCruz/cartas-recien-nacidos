@@ -118,14 +118,14 @@ function recalculateSelectAllCheckbox() {
     let selectAllCheckbox = $("#select-all-newborns");
     $("#newborns-table-body :checkbox:checked").each(() => {sum += 1});
 
-    if(sum == displayedRows) {
-        selectAllCheckbox.prop({
-            checked: true,
-            indeterminate: false
-        });
-    } else if(sum == 0) {
+    if(sum == 0) {
         selectAllCheckbox.prop({
             checked: false,
+            indeterminate: false
+        });
+    } else if(sum == displayedRows) {
+        selectAllCheckbox.prop({
+            checked: true,
             indeterminate: false
         });
     } else {
