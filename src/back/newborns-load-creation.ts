@@ -129,8 +129,14 @@ function enforceTwoDigits(value :number) {
 }
 
 
-function stringifyAddress(address :{TipoVia :string, NombreVia :string, Numero :string, Linea2 :string}) {
-    return `${address.TipoVia} ${address.NombreVia}           , Nº ${address.Numero}, ${address.Linea2}`;
+function stringifyAddress(address :{TipoVia :string, NombreVia :string, Numero :string, Linea2 :string} | null) {
+    if(address == null) {
+        return null;
+    }
+    if(!address.NombreVia) {    // Name is null or empty
+        return null;
+    }
+    return `${address.TipoVia} ${address.NombreVia}, Nº ${address.Numero}, ${address.Linea2}`;
 }
 
 
@@ -139,11 +145,11 @@ function pickAddress(db_entry :any, newborn :db.Newborn) {
     if(db_entry.Nacido_Fecha == null) {
         newborn.ObservacionesCruce += `Fecha de nacimiento nula. Ni se intenta el cruce (es un criterio básico para cruzar). `;
     } else if(db_entry.Madre_ViviendaDireccion && db_entry.Madre_ViviendaCodigoPostal) {
-        newborn.ViviendaDireccion = stringifyAddress(db_entry.Madre_ViviendaDireccion);
+        newborn.ViviendaDireccion = stringifyAddress(db_entry.Madre_ViviendaDireccion)!;
         newborn.ViviendaCodigoPostal = Number(db_entry.Madre_ViviendaCodigoPostal);
         newborn.ObservacionesCruce += `Dirección cruzada por madre. `;
     } else if(db_entry.Padre_ViviendaDireccion && db_entry.Padre_ViviendaCodigoPostal) {
-        newborn.ViviendaDireccion = stringifyAddress(db_entry.Padre_ViviendaDireccion);
+        newborn.ViviendaDireccion = stringifyAddress(db_entry.Padre_ViviendaDireccion)!;
         newborn.ViviendaCodigoPostal = Number(db_entry.Padre_ViviendaCodigoPostal);
         newborn.ObservacionesCruce += `Dirección cruzada por padre. `;
     } else {

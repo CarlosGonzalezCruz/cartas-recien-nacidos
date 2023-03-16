@@ -29,7 +29,7 @@ export function performQuery(query :string) :Promise<{[key :string] :any}[]> {
             if(err) {
                 reject(err);
             } else {
-                resolve(rows);
+                resolve(rows as any);
             }
         });
     });

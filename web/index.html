@@ -6,7 +6,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes">
 
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.1.0/dist/css/bootstrap.min.css" crossorigin="anonymous">
         <link rel="stylesheet" type="text/css" href="style.css" />
     </head>
     <body>
@@ -19,6 +19,7 @@
                 <table class="table table-striped">
                     <thead class="thead-dark">
                         <tr>
+                            <th><input type="checkbox" id="select-all-newborns" checked="checked"></th>
                             <th>Carga</th>
                             <th>Nacimiento</th>
                             <th>Nombre y apellidos</th>
@@ -29,6 +30,7 @@
                     </thead>
                     <tbody id="newborns-table-body">
                         <tr id="newborns-row-template" class="jquery-hidden">
+                            <td><input type="checkbox" id="select-newborn-{{Id}}" checked="checked"></td>
                             <td>{{NombreCarga}}</td>
                             <td>{{Nacido_Fecha}}</td>
                             <td>{{Nacido_Apellido1}} {{Nacido_Apellido2}}, {{Nacido_Nombre}}</td>
@@ -45,46 +47,51 @@
             </div>
             <div class="row">
                 <div class="col-md-5 d-flex flex-column">
-                    <div class="option-panel h-100 p-2">
-                        <div class="row d-flex justify-content-center">
+                    <div class="option-panel h-100 d-flex flex-column p-2">
+                        <div class="d-flex flex-row justify-content-center">
                             <h5>Filtro aplicado</h5>
                         </div>
-                        <div id="filters-panel" class="row">
-                            <div class="col-sm-9 d-flex flex-column">
+                        <div id="filters-panel" class="d-flex flex-column flex-md-row justify-content-around flex-fill">
+                            <div class="d-flex flex-column flex-grow-1">
                                 <div id="btn-filter-last-load" class="btn btn-inactive my-1">Mostrar última carga</div>
                                 <div id="btn-filter-all" class="btn btn-inactive my-1">Mostrar todos</div>
                                 <div id="btn-filter-address-only" class="btn btn-inactive my-1">Mostrar sólo con dirección</div>
                             </div>
-                            <div class="col-sm-3 d-flex flex-column pl-sm-0">
-                                <div id="btn-filter-custom" class="btn btn-inactive my-1 h-100 d-flex justify-content-center">
-                                    <img src="icons/funnel.svg" type="image/svg" class="w-100 d-none d-md-block">
-                                    <img src="icons/funnel.svg" type="image/svg" class="d-inline d-md-none">
-                                    <span class="d-md-none ml-1">Filtro personalizado</span>
+                            <div class="d-flex flex-column">
+                                <div id="btn-filter-custom" class="btn btn-inactive ml-md-2 my-1 d-flex flex-grow-1 justify-content-center">
+                                    <div class="d-none d-md-flex flex-column flex-fill justify-content-center">
+                                        <img src="icons/funnel.svg" type="image/svg" class="d-none d-md-block flex-fill h-50">
+                                        <span class="my-0 justify-content-center">Personalizado</span>
+                                    </div>
+                                    <div class="d-block d-md-none flex-fill justify-content-center">
+                                        <img src="icons/funnel.svg" type="image/svg" class="d-inline">
+                                        <span class="ml-1 justify-content-center">Filtro personalizado</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-4 d-flex flex-column">
-                    <div class="option-panel p-2 h-100">
+                    <div class="option-panel p-2 h-100 d-flex flex-column">
                         <div class="row d-flex justify-content-center">
                             <h5>Cargas</h5>
                         </div>
 
                         <div class="d-flex flex-column">
-                            <div class="w-100">
+                            <div>
                                 <div id="btn-create-load" class="btn bg-green my-1 d-flex justify-content-center">
                                     <img src="icons/file-earmark-plus.svg" type="image/svg" class="svg-inverted-color">
                                     <span class="ml-1">Nueva carga</span>
                                 </div>
                             </div>
-                            <div class="w-100">
+                            <div>
                                 <div id="btn-remove-load" class="btn bg-red my-1 d-flex justify-content-center">
                                     <img src="icons/file-earmark-x.svg" type="image/svg" class="svg-inverted-color">
                                     <span class="ml-1">Eliminar carga</span>
                                 </div>
                             </div>
-                            <div class="w-100">
+                            <div>
                                 <div id="btn-adhoc-registry" class="btn btn-inactive my-1 d-flex justify-content-center">
                                     <img src="icons/person-add.svg" type="image/svg" class="svg-inverted-color">
                                     <span class="ml-1">Registro&nbsp<i>ad hoc</i></span>
@@ -95,16 +102,34 @@
                     </div>
                 </div>
                 <div class="col-md-3 d-flex flex-column">
-                    <div class="option-panel p-2 h-100">
-                        <div class="row d-flex justify-content-center">
-                            <h5>Sobres</h5>
+                    <div class="option-panel p-2 h-100 d-flex flex-column">
+                        <div class="d-flex justify-content-center">
+                            <h5>Generar documentos</h5>
                         </div>
-                        <div class="row d-flex flex-column">
-                            <div class="col-12 w-100 d-flex flex-column">
-                                <div id="btn-generate-pdf" class="btn btn-inactive my-1 h-100 d-flex justify-content-center">
-                                    <img src="icons/envelope.svg" type="image/svg" class="w-50 d-none d-md-block">
-                                    <img src="icons/envelope.svg" type="image/svg" class="d-inline d-md-none">
-                                    <span class="d-md-none ml-1">Generar PDF</span>
+
+                        <div class="d-flex flex-column flex-md-row flex-fill my-1">
+                            <div class="d-flex flex-grow-1 mx-0 mx-md-1 my-1 my-md-0">
+                                <div id="btn-generate-pdf-letters" class="btn btn-inactive d-flex justify-content-center flex-grow-1">
+                                    <div class="d-none d-md-flex flex-column flex-fill justify-content-center">
+                                        <img src="icons/envelope.svg" type="image/svg" class="d-none d-md-block flex-fill h-50">
+                                        <span class="my-0 justify-content-center">Sobres</span>
+                                    </div>
+                                    <div class="d-block d-md-none flex-fill justify-content-center">
+                                        <img src="icons/envelope.svg" type="image/svg" class="d-inline">
+                                        <span class="ml-1 justify-content-center">Sobres</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex flex-grow-1 mx-0 mx-md-1 my-1 my-md-0">
+                                <div id="btn-generate-pdf-listing" class="btn btn-inactive d-flex justify-content-center flex-grow-1">
+                                    <div class="d-none d-md-flex flex-column flex-fill justify-content-center">
+                                        <img src="icons/journal-text.svg" type="image/svg" class="d-none d-md-block flex-fill h-50">
+                                        <span class="my-0 justify-content-center">Listado</span>
+                                    </div>
+                                    <div class="d-block d-md-none flex-fill justify-content-center">
+                                        <img src="icons/journal-text.svg" type="image/svg" class="d-inline">
+                                        <span class="ml-1 justify-content-center">Listado</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>

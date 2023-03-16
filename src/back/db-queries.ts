@@ -49,7 +49,7 @@ export async function getNewbornsFromLastLoad(): Promise<readonly Newborn[]> {
     let result = await db.performQuery(`
         SELECT * FROM Nacimientos WHERE AnnoCarga = (SELECT MAX(AnnoCarga) FROM Nacimientos)
         AND IdMesCarga = (SELECT MAX(IdMesCarga) FROM Nacimientos WHERE AnnoCarga = (SELECT MAX(AnnoCarga) FROM Nacimientos))
-        ORDER BY NombreCarga DESC, Nacido_Nombre, Nacido_Apellido1, Nacido_Apellido2
+        ORDER BY NombreCarga DESC, ViviendaCodigoPostal, ViviendaDireccion, Nacido_Nombre, Nacido_Apellido1, Nacido_Apellido2
     `) as Newborn[];
     lastFilterQueryResult = result;
     return result;
@@ -57,7 +57,7 @@ export async function getNewbornsFromLastLoad(): Promise<readonly Newborn[]> {
 
 export async function getAllNewborns(): Promise<readonly Newborn[]> {
     let result = await db.performQuery(`
-        SELECT * FROM Nacimientos ORDER BY NombreCarga DESC, Nacido_Nombre, Nacido_Apellido1, Nacido_Apellido2
+        SELECT * FROM Nacimientos ORDER BY NombreCarga DESC, ViviendaCodigoPostal, ViviendaDireccion, Nacido_Nombre, Nacido_Apellido1, Nacido_Apellido2
     `) as Newborn[];
     lastFilterQueryResult = result;
     return result;
@@ -66,10 +66,23 @@ export async function getAllNewborns(): Promise<readonly Newborn[]> {
 export async function getNewbornsWithAddressOnly(): Promise<readonly Newborn[]> {
     let result = await db.performQuery(`
         SELECT * FROM Nacimientos WHERE ViviendaDireccion Is Not Null
-        ORDER BY NombreCarga DESC, Nacido_Nombre, Nacido_Apellido1, Nacido_Apellido2
+        ORDER BY NombreCarga DESC, ViviendaCodigoPostal, ViviendaDireccion, Nacido_Nombre, Nacido_Apellido1, Nacido_Apellido2
     `) as Newborn[];
     lastFilterQueryResult = result;
     return result;
+}
+
+export function getLastInsertedNewborn() {
+    return db.performQuery(`
+        SELECT * FROM Nacimientos WHERE Id = (SELECT LAST_INSERT_ROWID())
+    `) as Promise<Newborn[]>;
+}
+
+export function getNewbornsWithIds(...id :(string | number)[]) {
+    return db.performQuery(`
+        SELECT * FROM Nacimientos WHERE Id IN (${id.join(",")})
+        ORDER BY NombreCarga DESC, ViviendaCodigoPostal, ViviendaDireccion, Nacido_Nombre, Nacido_Apellido1, Nacido_Apellido2
+    `) as Promise<Newborn[]>;
 }
 
 export async function getNewbornsWithCustomFilter(...params :[string, string][]) {
@@ -83,7 +96,7 @@ export async function getNewbornsWithCustomFilter(...params :[string, string][])
     if(!!condition) {
         let result = await db.performQuery(`
             SELECT * FROM Nacimientos WHERE ${condition}
-            ORDER BY NombreCarga DESC, Nacido_Nombre, Nacido_Apellido1, Nacido_Apellido2
+            ORDER BY NombreCarga DESC, ViviendaCodigoPostal, ViviendaDireccion, Nacido_Nombre, Nacido_Apellido1, Nacido_Apellido2
         `) as Newborn[];
         lastFilterQueryResult = result;
         return result;    

@@ -4,7 +4,9 @@ import * as utils from "./utils.js";
 
 let loads :{NombreCarga :string}[] = [];
 
-export function enableLoadUpdateButtons() {
+export async function enableLoadUpdateButtons() {
+    await utils.documentReady();
+
     $("#btn-create-load").on("click", async e => {
         prepareDefaultDate();
         setModalConfirmEnabled($("#btn-create-load-confirm"), validateLoadCreation());
@@ -42,6 +44,7 @@ export function enableLoadUpdateButtons() {
         if(validateAdHocRegistry()) {
             createAdHocRegistry();
             $("#modal-adhoc-registry").modal("hide");
+            filters.applyAdHocRegistrationFilter();
         } else {
             utils.displayMessageBox("Los datos introducidos no son correctos. Por favor revíselos.", "error");
         }

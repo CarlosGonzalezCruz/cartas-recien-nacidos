@@ -33,21 +33,10 @@ export function preloadMsgBoxIcons() {
 }
 
 
-export async function downloadLetters() {
-    try {
-        let fetchRequest = await fetch("/newborns-data/letters");
-        if(!fetchRequest.ok) {
-            displayMessageBox("La carga seleccionada está vacía. Es posible que el servidor "
-            + "haya sido reiniciado durante su sesión. Recargue la página e inténtelo de nuevo.", "error");
-        } else {
-            let data = await fetchRequest.blob();
-            displayMessageBox("Se han generado sobres para el último filtro seleccionado o, en su defecto, "
-            + "para la carga más reciente. El archivo debería haberse abierto en otra pestaña.", "success");
-            window.open(window.URL.createObjectURL(data));
-        }
-    } catch(e) {
-        displayMessageBox(`Ha ocurrido un problema al conectar con el servidor.`, "error");
-    }
+export function documentReady() {
+    return new Promise<void>(resolve => {
+        jQuery(resolve);
+    });
 }
 
 
@@ -84,4 +73,13 @@ export function addModalButtonKeybinding() {
             $(".modal:visible .modal-footer .btn:last-child").get(0)?.click();
         }
     });
+}
+
+
+export function getSelectedNewbornIds() {
+    let ret :string[] = [];
+    $("#newborns-table-body tr").has(":checkbox:checked").each(function() {
+        ret.push($(this).attr("newborn-id") as string);
+    })
+    return ret;
 }

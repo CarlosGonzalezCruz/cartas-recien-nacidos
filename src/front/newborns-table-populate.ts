@@ -20,6 +20,7 @@ function clearTable(tableBody :JQuery<HTMLElement>) {
 function generateRow(data :any, template :JQuery<HTMLElement>, tableBody :JQuery<HTMLElement>) {
     let row = template.clone();
     row.removeAttr("id");
+    row.attr("newborn-id", data["Id"]);
     let rowHtml = row.html();
     let matches = rowHtml.matchAll(/{{(\w*)}}/g);
 
