@@ -133,7 +133,7 @@ function stringifyAddress(address :{TipoVia :string, NombreVia :string, Numero :
     if(address == null) {
         return null;
     }
-    if(address.NombreVia == null) {
+    if(!address.NombreVia) {    // Name is null or empty
         return null;
     }
     return `${address.TipoVia} ${address.NombreVia}, Nº ${address.Numero}, ${address.Linea2}`;
