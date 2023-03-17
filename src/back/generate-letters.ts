@@ -1,5 +1,5 @@
 import PDF from "pdfkit";
-import { Newborn } from "./db-queries";
+import { Newborn } from "./utils.js";
 
 
 // Sizes and distances are indicated in points (pt)

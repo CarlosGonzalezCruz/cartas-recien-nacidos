@@ -1,32 +1,7 @@
 import * as db from './db-connection.js';
+import { Newborn } from "./utils.js";
 
 export const NO_LOADS_ERROR = "No loads";
-
-export type Newborn = {
-    Nacido_Fecha? :string,
-    Nacido_Nombre? :string,
-    Nacido_Apellido1? :string,
-    Nacido_Apellido2? :string,
-    Padre_Nombre? :string,
-    Padre_Apellido1? :string,
-    Padre_Apellido2? :string,
-    Padre_DNI_Extranjero? :boolean,
-    Padre_DNI? :number,
-    Padre_DNI_Letra? :string,
-    Madre_DNI_Extranjero? :boolean,
-    Madre_DNI? :number,
-    Madre_DNI_Letra? :string,
-    NombreCarga? :string,
-    AnnoCarga? :number,
-    MesCarga? :string,
-    IdMesCarga? :number,
-    ViviendaDireccion? :string,
-    ViviendaCodigoPostal? :number,
-    ViviendaNombreMunicipio? :string,
-    FechaNacimiento? :string,
-    ObservacionesCruce? :string,
-    [index :string] :any
-}
 
 type Load = {
     NombreCarga :string,
@@ -183,6 +158,7 @@ export async function isLoadPresent(loadName :string) {
     return rows[0]["COUNT"] != 0;
 }
 
+
 export async function deleteLoad(loadName :string) {
     console.log(`Solicitada la eliminación de la carga ${loadName}`);
     await db.performQuery(
@@ -193,6 +169,7 @@ export async function deleteLoad(loadName :string) {
     console.log(`Eliminadas ${await lastOperationAmountOfRowsUpdated()} filas`);
 }
 
+
 export async function lastOperationAmountOfRowsUpdated() {
     let query = await db.performQuery(
         `
@@ -200,4 +177,19 @@ export async function lastOperationAmountOfRowsUpdated() {
         `
     ) as {COUNT :number}[];
     return query[0].COUNT;
+}
+
+
+export async function getAddressByIdDocument(identifier :string, validator :string | null) {
+    let query = await db.performQueryOracleDb(
+        `
+        SELECT DIRTOTDIR, DIRCODPOS, DIRNOMMUN
+        FROM REPOS.PMH_HABITANTE H
+        INNER JOIN REPOS.PMH_SIT_HABITANTE SIT ON SIT.HABITANTE_ID = H.DBOID
+        INNER JOIN REPOS.PMH_VIVIENDA V ON SIT.VIVIENDA_ID = V.DBOID
+        INNER JOIN REPOS.SP_BDC_DIRECC D ON V.ADDRESS_ID = D.DIRDBOIDE
+        WHERE H.DOC_IDENTIFICADOR = '${identifier}' ${validator != null ? "AND H.DOC_LETRA = '" + validator + "'" : ""}
+        `
+    ) as {rows: string[][]};
+    return query.rows.length > 0 ? query.rows[0] : null;
 }

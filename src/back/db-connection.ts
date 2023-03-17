@@ -28,9 +28,28 @@ export async function open() {
 
 export async function close() {
     await Promise.all([
+        console.log(`La conexión con MySQL se cerrará automáticamente.`),
         new Promise<void>(r => sqlite3db.close(() => {console.log(`Conexión terminada con ${DB_PATH}`); r()})),
         new Promise<void>(r => oracledb.close().then(() => {console.log(`Conexión terminada con Oracle DB.`); r()}))
     ]);
+}
+
+
+export async function performQueryMySQL(query :string, params :any = []) {
+     return new Promise((resolve, reject) => {
+        mysqldb.query(query, params, (error, result) => {
+            if(error) {
+                reject(error);
+            } else {
+                resolve(result);
+            }
+        });
+     });
+}
+
+
+export async function performQueryOracleDb(query :string, params :any = []) {
+    return oracledb.execute(query, params);
 }
 
 
@@ -66,6 +85,7 @@ async function establishOracleDBConnection() {
         console.log("Probando a realizar una consulta trivial con Oracle DB...");
         await ret.execute("SELECT COUNT(1) FROM ALL_TABLES");
         console.log("Consulta resuelta con Oracle DB.");
+        oracledb = ret;
     } catch(e) {
         throw new Error(`Oracle DB no está resolviendo consultas. Causa: ${e}`);
     }

@@ -2,11 +2,20 @@ import fs from "fs";
 import PersistentFile from "formidable/PersistentFile.js";
 import * as db from "./db-queries.js";
 import * as properties from "./properties.js";
+import { Newborn } from "./utils.js";
 
 type LoadCreationResult = {
     success :boolean,
     msg :string
 };
+
+enum IdDocumentType {
+    UNKNOWN, NIE, DNI, PASSPORT
+}
+
+enum Parent {
+    FATHER = "Padre", MOTHER = "Madre"
+}
 
 export type UploadedFile = PersistentFile & {
     filepath :string                        // Not included in library documentation, for some reason
@@ -21,37 +30,45 @@ export async function createLoads(year :string | number, month :string, file :Up
         return loadName;
     }
 
-    let newborns :db.Newborn[] = []
+    let newborns :Newborn[] = []
+    let newbornDataPromises :Promise<void>[] = [];
 
-    for(let dbNewbornData of readFileEntries(file)) {
+    for await(let dbNewbornData of readFileEntries(file)) {
         let newborn = {
-            Nacido_Fecha: dbNewbornData.Nacido_Fecha,
-            Nacido_Nombre: dbNewbornData.Nacido_Nombre,
-            Nacido_Apellido1: dbNewbornData.Nacido_Apellido1,
-            Nacido_Apellido2: dbNewbornData.Nacido_Apellido2,
-            Padre_Nombre: dbNewbornData.Padre_Nombre,
-            Padre_Apellido1: dbNewbornData.Padre_Apellido1,
-            Padre_Apellido2: dbNewbornData.Padre_Apellido2,
-            Padre_DNI_Extranjero: dbNewbornData.Padre_DNI_Extranjero == '1',
-            Padre_DNI: Number(dbNewbornData.Padre_DNI),
-            Padre_DNI_Letra: dbNewbornData.Padre_DNI_Letra,
-            Madre_Nombre: dbNewbornData.Madre_Nombre,
-            Madre_Apellido1: dbNewbornData.Madre_Apellido1,
-            Madre_Apellido2: dbNewbornData.Madre_Apellido2,
-            Madre_DNI_Extranjero: dbNewbornData.Madre_DNI_Extranjero == '1',
-            Madre_DNI: Number(dbNewbornData.Madre_DNI),
-            Madre_DNI_Letra: dbNewbornData.Madre_DNI_Letra,
+            Nacido_Fecha: dbNewbornData.Nacido_Fecha ? formatDate(dbNewbornData.Nacido_Fecha) : null,
+            Nacido_Nombre: dbNewbornData.Nacido_Nombre ?? null,
+            Nacido_Apellido1: dbNewbornData.Nacido_Apellido1 ?? null,
+            Nacido_Apellido2: dbNewbornData.Nacido_Apellido2 ?? null,
+            Padre_Nombre: dbNewbornData.Padre_Nombre ?? null,
+            Padre_Apellido1: dbNewbornData.Padre_Apellido1 ?? null,
+            Padre_Apellido2: dbNewbornData.Padre_Apellido2 ?? null,
+            Padre_DNI_Extranjero: dbNewbornData.Padre_DNI_Extranjero ?? null,
+            Padre_DNI: dbNewbornData.Padre_DNI ?? null,
+            Padre_DNI_Letra: dbNewbornData.Padre_DNI_Letra ?? null,
+            Madre_Nombre: dbNewbornData.Madre_Nombre ?? null,
+            Madre_Apellido1: dbNewbornData.Madre_Apellido1 ?? null,
+            Madre_Apellido2: dbNewbornData.Madre_Apellido2 ?? null,
+            Madre_DNI_Extranjero: dbNewbornData.Madre_DNI_Extranjero ?? null,
+            Madre_DNI: dbNewbornData.Madre_DNI ?? null,
+            Madre_DNI_Letra: dbNewbornData.Madre_DNI_Letra ?? null,
             NombreCarga: loadName,
-            AnnoCarga: Number(year),
+            AnnoCarga: year,
             MesCarga: month,
             IdMesCarga: getMonthId(month),
-            ViviendaNombreMunicipio: "ALCALA DE HENARES"
-        } as db.Newborn;
+            ViviendaDireccion: null,
+            ViviendaCodigoPostal: null,
+            ViviendaNombreMunicipio: null,
+            ObservacionesCruce: null
+        } as Newborn;
 
-        pickAddress(dbNewbornData, newborn);
-        newborns.push(newborn);
+        newbornDataPromises.push(new Promise(async (resolve, reject) => {
+            await pickAddress(dbNewbornData, newborn);
+            newborns.push(newborn);
+            resolve();
+        }))
     }
 
+    await Promise.all(newbornDataPromises);
     let result = await db.insertNewborn(loadName, ...newborns);
     if(result.success) {
         return success(`Se han añadido ${result.count} registros nuevos correspondientes a la carga ${loadName}.`);
@@ -92,26 +109,26 @@ function* readFileEntries(file :UploadedFile) {
                 Padre_DNI_Extranjero: row.substring(176, 177).trim(),
                 Padre_DNI: row.substring(177, 185).trim(),
                 Padre_DNI_Letra: row.substring(185, 186).trim(),
-                Padre_ViviendaDireccion: {
+                /* Padre_ViviendaDireccion: {
                     TipoVia: row.substring(194, 199).trim(),
                     NombreVia: row.substring(199, 249).trim(),
                     Numero: row.substring(249, 254).trim(),
                     Linea2: row.substring(254, 263).trim(),
                 },
-                Padre_ViviendaCodigoPostal: row.substring(263, 268).trim(),
+                Padre_ViviendaCodigoPostal: row.substring(263, 268).trim(), */
                 Madre_Nombre: row.substring(268, 288).trim(),
                 Madre_Apellido1: row.substring(288, 313).trim(),
                 Madre_Apellido2: row.substring(313, 338).trim(),
                 Madre_DNI_Extranjero: row.substring(339, 340).trim(),
                 Madre_DNI: row.substring(340, 348).trim(),
                 Madre_DNI_Letra: row.substring(348, 349).trim(),
-                Madre_ViviendaDireccion: {
+                /* Madre_ViviendaDireccion: {
                     TipoVia: row.substring(357, 362).trim(),
                     NombreVia: row.substring(362, 412).trim(),
                     Numero: row.substring(412, 417).trim(),
                     Linea2: row.substring(417, 426).trim(),
                 },
-                Madre_ViviendaCodigoPostal: row.substring(426, 431).trim()
+                Madre_ViviendaCodigoPostal: row.substring(426, 431).trim() */
             }
         }
     } catch(e) {
@@ -139,26 +156,66 @@ function enforceTwoDigits(value :number) {
 }
 
 
-function stringifyAddress(address :{TipoVia :string, NombreVia :string, Numero :string, Linea2 :string}) {
-    return `${address.TipoVia} ${address.NombreVia}, ${address.Numero}, ${address.Linea2}`;
+function formatDate(rawDate :string) {
+    return rawDate.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3");
 }
 
 
-function pickAddress(db_entry :any, newborn :db.Newborn) {
+async function pickAddress(db_entry :any, newborn :Newborn) {
     newborn.ObservacionesCruce = "";
     if(db_entry.Nacido_Fecha == null) {
         newborn.ObservacionesCruce += `Fecha de nacimiento nula. Ni se intenta el cruce (es un criterio básico para cruzar). `;
-    } else if(db_entry.Madre_ViviendaDireccion && db_entry.Madre_ViviendaCodigoPostal) {
-        newborn.ViviendaDireccion = stringifyAddress(db_entry.Madre_ViviendaDireccion);
-        newborn.ViviendaCodigoPostal = Number(db_entry.Madre_ViviendaCodigoPostal);
-        newborn.ObservacionesCruce += `Dirección cruzada por madre. `;
-    } else if(db_entry.Padre_ViviendaDireccion && db_entry.Padre_ViviendaCodigoPostal) {
-        newborn.ViviendaDireccion = stringifyAddress(db_entry.Padre_ViviendaDireccion);
-        newborn.ViviendaCodigoPostal = Number(db_entry.Padre_ViviendaCodigoPostal);
-        newborn.ObservacionesCruce += `Dirección cruzada por padre. `;
-    } else {
-        newborn.ObservacionesCruce += `Dirección de los padres no encontrada, o hijo/a no vive allí. `;
+        return;
     }
+    let observaciones :string[] = [];
+    let found = false;
+
+    for(let p of [Parent.MOTHER, Parent.FATHER]) {
+        let idData =  processIdDocument(newborn[`${p}_DNI`], newborn[`${p}_DNI_Extranjero`], newborn[`${p}_DNI_Letra`]);
+        if(idData == null) {
+            observaciones.push(`Doc identidad ${p} no válido.`);
+        } else {
+            let foundAddress = await db.getAddressByIdDocument(idData.identifier, idData.validator);
+            if(foundAddress != null) {
+                newborn.ViviendaDireccion = foundAddress[0];
+                newborn.ViviendaCodigoPostal = foundAddress[1];
+                newborn.ViviendaNombreMunicipio = foundAddress[2];
+                observaciones.push(`Dirección cruzada por ${p}.`);
+                found = true;
+            }
+            break;
+        }
+    }
+    if(!found) {
+        observaciones.push(`Dirección de los padres no encontrada, o hijo/a no vive allí.`);
+    }
+    newborn.ObservacionesCruce = observaciones.join(" ");
+}
+
+
+function processIdDocument(identifier? :string | null, nieValidator? :string | null, dniValidator? :string | null) {
+    if(!!identifier) {
+        if(!!nieValidator) {
+            return {
+                type: IdDocumentType.NIE,
+                identifier: `${nieValidator}${identifier.substring(identifier.length-7)}`,
+                validator: null
+            }
+        } else if(!!dniValidator) {
+            return {
+                type: IdDocumentType.DNI,
+                identifier: identifier.padStart(9, "0"),
+                validator: dniValidator
+            }
+        } else if(identifier != "00000000") {
+            return {
+                type: IdDocumentType.PASSPORT,
+                identifier: identifier,
+                validator: null
+            }
+        }
+    }
+    return null;
 }
 
 
