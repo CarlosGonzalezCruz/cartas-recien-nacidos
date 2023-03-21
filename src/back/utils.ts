@@ -1,7 +1,7 @@
 
 
 export type Newborn = {
-    Nacido_Fecha :string | null,
+    Nacido_Fecha :Date | null,
     Nacido_Nombre :string | null,
     Nacido_Apellido1 :string | null,
     Nacido_Apellido2 :string | null,

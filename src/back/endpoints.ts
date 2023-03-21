@@ -107,6 +107,6 @@ APP.delete('/newborns-data/loads', async (request, result) => {
     let loadName = request.body[0][1];
     await db.deleteLoad(loadName);
     result.send({
-        count: await db.lastOperationAmountOfRowsUpdated()
+        count: await db.lastOperationAmountOfRowsUpdated(true)
     });
 });

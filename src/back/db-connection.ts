@@ -1,27 +1,16 @@
 import OracleDB from "oracledb";
 import MySQL from "mysql";
-import sqlite3 from "sqlite3";
 import * as properties from "./properties.js";
 
 
 const DB_PATH = "./db/nacimientos";
-let sqlite3db :sqlite3.Database;
 let oracledb :OracleDB.Connection;
 let mysqldb :MySQL.Connection;
 
 
 export async function open() {
-    let sqlite3connection = new Promise((resolve, reject) => {
-        sqlite3db = new sqlite3.Database(DB_PATH, err => {
-            if(err) {
-                reject(err);
-            }
-            console.log(`Conectado a ${DB_PATH}`);
-        });
-        resolve(sqlite3db);
-    }) as Promise<sqlite3.Database>;
-
-    await Promise.all([sqlite3connection, establishOracleDBConnection(), establishMySQLConnection()]);
+    await Promise.all([ establishOracleDBConnection(), establishMySQLConnection()]);
+    await initTables();
     console.log("Todas las conexiones listas.");
 }
 
@@ -29,15 +18,20 @@ export async function open() {
 export async function close() {
     await Promise.all([
         console.log(`La conexión con MySQL se cerrará automáticamente.`),
-        new Promise<void>(r => sqlite3db.close(() => {console.log(`Conexión terminada con ${DB_PATH}`); r()})),
         new Promise<void>(r => oracledb.close().then(() => {console.log(`Conexión terminada con Oracle DB.`); r()}))
     ]);
 }
 
 
-export async function performQueryMySQL(query :string, params :any = []) {
+export function profileTable(tableName :string) {
+    let suffix = properties.get<string>("MySQL.table-suffix", "");
+    return `${tableName}${!!suffix ? "_" : ""}${suffix ?? ""}`;
+}
+
+
+export async function performQueryMySQL(query :string) :Promise<any> {
      return new Promise((resolve, reject) => {
-        mysqldb.query(query, params, (error, result) => {
+        mysqldb.query(query, (error, result) => {
             if(error) {
                 reject(error);
             } else {
@@ -48,21 +42,8 @@ export async function performQueryMySQL(query :string, params :any = []) {
 }
 
 
-export async function performQueryOracleDb(query :string, params :any = []) {
-    return oracledb.execute(query, params);
-}
-
-
-export function performQuery(query :string) :Promise<{[key :string] :any}[]> {
-    return new Promise((resolve, reject) => {
-        sqlite3db.all(query, (err, rows) => {
-            if(err) {
-                reject(err);
-            } else {
-                resolve(rows);
-            }
-        });
-    });
+export async function performQueryOracleDb(query :string) {
+    return oracledb.execute(query);
 }
 
 
@@ -123,4 +104,51 @@ async function establishMySQLConnection() {
             });
         })
     );
+}
+
+
+async function initTables() {
+    let newbornsTable = profileTable("NACIMIENTOS");
+    let existingTables = await performQueryMySQL(`SHOW TABLES FROM CRN LIKE '${newbornsTable}'`) as string[];
+    if(existingTables.length == 0) {
+        console.log(`Se van a crear las tablas necesarias en MySQL.`);
+        try {
+            await performQueryMySQL(`
+                CREATE TABLE CRN.${newbornsTable} (
+                    Id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                    Nacido_Fecha DATE,
+                    Nacido_Nombre TEXT,
+                    Nacido_Apellido1 TEXT,
+                    Nacido_Apellido2 TEXT,
+                    Padre_Nombre TEXT,
+                    Padre_Apellido1 TEXT,
+                    Padre_Apellido2 TEXT,
+                    Padre_DNI_Extranjero TEXT,
+                    Padre_DNI TEXT,
+                    Padre_DNI_Letra TEXT,
+                    Madre_Nombre TEXT,
+                    Madre_Apellido1 TEXT,
+                    Madre_Apellido2 TEXT,
+                    Madre_DNI_Extranjero TEXT,
+                    Madre_DNI TEXT,
+                    Madre_DNI_Letra TEXT,
+                    NombreCarga VARCHAR(16),
+                    AnnoCarga INTEGER,
+                    MesCarga TEXT,
+                    IdMesCarga INTEGER,
+                    ViviendaDireccion TEXT,
+                    ViviendaCodigoPostal VARCHAR(5),
+                    ViviendaNombreMunicipio TEXT,
+                    ObservacionesCruce TEXT,
+                    INDEX NombreCarga_idx(NombreCarga),
+                    INDEX ViviendaDireccion_idx(ViviendaDireccion(6)),
+                    INDEX ViviendaCodigoPostal_idx(ViviendaCodigoPostal)
+                );
+            `);
+            console.log(`Tabla ${newbornsTable} creada en MySQL.`);
+        } catch(e) {
+            throw new Error(`No se ha podido crear la tabla ${newbornsTable} en MySQL. Causa: ${e}.`);
+        }
+
+    }
 }

@@ -25,56 +25,65 @@ const MONTH_NAMES = ["<0>", "ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO
 
 
 export async function createLoads(year :string | number, month :string, file :UploadedFile) :Promise<LoadCreationResult> {
-    let loadName = await generateLoadName(year, month);
-    if(typeof loadName != "string") {
-        return loadName;
-    }
+    try {
+        let loadName = await generateLoadName(year, month);
+        if(typeof loadName != "string") {
+            return loadName;
+        }
 
-    let newborns :Newborn[] = []
-    let newbornDataPromises :Promise<void>[] = [];
+        let newborns :Newborn[] = []
+        let newbornDataPromises :Promise<void>[] = [];
 
-    for await(let dbNewbornData of readFileEntries(file)) {
-        let newborn = {
-            Nacido_Fecha: dbNewbornData.Nacido_Fecha ? formatDate(dbNewbornData.Nacido_Fecha) : null,
-            Nacido_Nombre: dbNewbornData.Nacido_Nombre ?? null,
-            Nacido_Apellido1: dbNewbornData.Nacido_Apellido1 ?? null,
-            Nacido_Apellido2: dbNewbornData.Nacido_Apellido2 ?? null,
-            Padre_Nombre: dbNewbornData.Padre_Nombre ?? null,
-            Padre_Apellido1: dbNewbornData.Padre_Apellido1 ?? null,
-            Padre_Apellido2: dbNewbornData.Padre_Apellido2 ?? null,
-            Padre_DNI_Extranjero: dbNewbornData.Padre_DNI_Extranjero ?? null,
-            Padre_DNI: dbNewbornData.Padre_DNI ?? null,
-            Padre_DNI_Letra: dbNewbornData.Padre_DNI_Letra ?? null,
-            Madre_Nombre: dbNewbornData.Madre_Nombre ?? null,
-            Madre_Apellido1: dbNewbornData.Madre_Apellido1 ?? null,
-            Madre_Apellido2: dbNewbornData.Madre_Apellido2 ?? null,
-            Madre_DNI_Extranjero: dbNewbornData.Madre_DNI_Extranjero ?? null,
-            Madre_DNI: dbNewbornData.Madre_DNI ?? null,
-            Madre_DNI_Letra: dbNewbornData.Madre_DNI_Letra ?? null,
-            NombreCarga: loadName,
-            AnnoCarga: year,
-            MesCarga: month,
-            IdMesCarga: getMonthId(month),
-            ViviendaDireccion: null,
-            ViviendaCodigoPostal: null,
-            ViviendaNombreMunicipio: null,
-            ObservacionesCruce: null
-        } as Newborn;
+        for await(let dbNewbornData of readFileEntries(file)) {
+            let newborn = {
+                Nacido_Fecha: dbNewbornData.Nacido_Fecha ? formatDate(dbNewbornData.Nacido_Fecha) : null,
+                Nacido_Nombre: dbNewbornData.Nacido_Nombre ?? null,
+                Nacido_Apellido1: dbNewbornData.Nacido_Apellido1 ?? null,
+                Nacido_Apellido2: dbNewbornData.Nacido_Apellido2 ?? null,
+                Padre_Nombre: dbNewbornData.Padre_Nombre ?? null,
+                Padre_Apellido1: dbNewbornData.Padre_Apellido1 ?? null,
+                Padre_Apellido2: dbNewbornData.Padre_Apellido2 ?? null,
+                Padre_DNI_Extranjero: dbNewbornData.Padre_DNI_Extranjero ?? null,
+                Padre_DNI: dbNewbornData.Padre_DNI ?? null,
+                Padre_DNI_Letra: dbNewbornData.Padre_DNI_Letra ?? null,
+                Madre_Nombre: dbNewbornData.Madre_Nombre ?? null,
+                Madre_Apellido1: dbNewbornData.Madre_Apellido1 ?? null,
+                Madre_Apellido2: dbNewbornData.Madre_Apellido2 ?? null,
+                Madre_DNI_Extranjero: dbNewbornData.Madre_DNI_Extranjero ?? null,
+                Madre_DNI: dbNewbornData.Madre_DNI ?? null,
+                Madre_DNI_Letra: dbNewbornData.Madre_DNI_Letra ?? null,
+                NombreCarga: loadName,
+                AnnoCarga: year,
+                MesCarga: month,
+                IdMesCarga: getMonthId(month),
+                ViviendaDireccion: null,
+                ViviendaCodigoPostal: null,
+                ViviendaNombreMunicipio: null,
+                ObservacionesCruce: null
+            } as Newborn;
 
-        newbornDataPromises.push(new Promise(async (resolve, reject) => {
-            await pickAddress(dbNewbornData, newborn);
-            newborns.push(newborn);
-            resolve();
-        }))
-    }
+            newbornDataPromises.push(new Promise(async (resolve, reject) => {
+                pickAddress(dbNewbornData, newborn).then(() => {
+                    newborns.push(newborn);
+                    resolve();
+                }).catch(e => {
+                    reject(`Ha habido un problema al averiguar la dirección. Es posible que el archivo de la carga no sea válido. Causa: ${e}`);
+                });
+            }))
+        }
 
-    await Promise.all(newbornDataPromises);
-    let result = await db.insertNewborn(loadName, ...newborns);
-    if(result.success) {
-        return success(`Se han añadido ${result.count} registros nuevos correspondientes a la carga ${loadName}.`);
-    } else {
+        await Promise.all(newbornDataPromises);
+        let result = await db.insertNewborn(loadName, ...newborns);
+        if(result.success) {
+            return success(`Se han añadido ${result.count} registros nuevos correspondientes a la carga ${loadName}.`);
+        } else {
+            return failure(`Consulta la consola del servidor para más información.`);
+        }
+    } catch(e) {
+        console.error(`${e}`);
         return failure(`Consulta la consola del servidor para más información.`);
     }
+    
 }
 
 

@@ -135,7 +135,11 @@ function validateAdHocRegistry() {
 
 async function fetchPossibleLoads() {
     let fetchRequest = await fetch("/newborns-data/loads");
+
     let data :{"NombreCarga" :string}[] = await fetchRequest.json();
+    if(data.length == 0) {
+        return;
+    }
     let sortedLoads = data.sort((a1, a2) => a1.NombreCarga > a2.NombreCarga ? 1 : -1); // Oldest first
     loads = sortedLoads;
     $("#selector-remove-load-options").empty();

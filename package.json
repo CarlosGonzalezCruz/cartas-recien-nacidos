@@ -6,8 +6,7 @@
     "mysql": "^2.18.1",
     "oracledb": "file:./node-oracledb",
     "pdfkit": "^0.13.0",
-    "properties-reader": "^2.2.0",
-    "sqlite3": "^5.1.4"
+    "properties-reader": "^2.2.0"
   },
   "type": "module",
   "devDependencies": {
