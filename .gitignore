@@ -3,3 +3,5 @@ node_modules/**
 out/**
 db/**
 properties/**
+!properties/template.ini
+build/**
