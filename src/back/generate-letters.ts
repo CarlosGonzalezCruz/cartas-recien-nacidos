@@ -30,7 +30,7 @@ export async function generateLettersForNewborns(...newborns :Newborn[]) {
                 continue;
             }
             if(!firstPage) {
-                // PDFKit documents have 1 page by default. If we were to add a new page for the first newborn, we'd be left with a blank leading page
+                // PDFKit documents have 1 page by default. If we were to add a new page for the first newborn, we'd be left with a leading blank page
                 document.addPage();
             }
             generateEnvelope(document, newborn);
@@ -65,13 +65,6 @@ export async function generateListingForNewborns(...newborns :Newborn[]) {
         let rows = newborns
             .filter(n => n.ViviendaDireccion != null && n.ViviendaCodigoPostal != null)
             .map(n => [`FAMILIARES DE ${n.Nacido_Nombre} ${n.Nacido_Apellido1} ${n.Nacido_Apellido2}`, `${n.ViviendaDireccion}`, `${n.ViviendaCodigoPostal}`]);
-
-        // document.text(`Listado Nacidos ${commonLoad.month ? commonLoad.month : "varios meses"} de ${commonLoad.year ? commonLoad.year : "varios años"}`,
-        // {
-        //     underline: true,
-        //     align: "center"
-        // });
-        // document.fontSize(12);
         
         document.font("Helvetica-Bold").fontSize(24)
             .text(`Listado Nacidos ${commonLoad.month ? commonLoad.month : "varios meses"} de ${commonLoad.year ? commonLoad.year : "varios años"}`, {align: "center", underline: true});

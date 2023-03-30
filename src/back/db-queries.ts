@@ -56,6 +56,9 @@ export function getLastInsertedNewborn() {
 }
 
 export function getNewbornsWithIds(...id :(string | number)[]) {
+    if(id.length == 0) {
+        return new Promise<Newborn[]>(r => r([]));
+    }
     return db.performQueryMySQL(`
         SELECT * FROM CRN.${db.profileTable("NACIMIENTOS")} WHERE Id IN (${id.join(",")})
         ORDER BY NombreCarga DESC, ViviendaCodigoPostal, ViviendaDireccion, Nacido_Nombre, Nacido_Apellido1, Nacido_Apellido2
@@ -210,7 +213,12 @@ export async function getAddressByIdDocument(identifier :string, validator :stri
         INNER JOIN REPOS.PMH_VIVIENDA V ON SIT.VIVIENDA_ID = V.DBOID
         INNER JOIN REPOS.SP_BDC_DIRECC D ON V.ADDRESS_ID = D.DIRDBOIDE
         WHERE H.DOC_IDENTIFICADOR = '${identifier}' ${validator != null ? "AND H.DOC_LETRA = '" + validator + "'" : ""}
-        `
+        AND SIT.ALTA_FECHA = (
+            SELECT MAX(SIT.ALTA_FECHA)
+	        FROM REPOS.PMH_SIT_HABITANTE SIT
+	        INNER JOIN REPOS.PMH_HABITANTE H ON H.DBOID = SIT.HABITANTE_ID
+	        WHERE H.DOC_IDENTIFICADOR = '${identifier}' ${validator != null ? "AND H.DOC_LETRA = '" + validator + "'" : ""}
+        )`
     ) as {rows :string[][]};
     return query.rows.length > 0 ? query.rows[0] : null;
 }
