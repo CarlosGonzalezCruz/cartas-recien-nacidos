@@ -93,7 +93,7 @@ APP.post('/newborns-data/custom', async (request, result) => {
 APP.post('/newborns-data/loads', async (request, result) => {
     let form = formidable();
     form.parse(request, (error, fields, files) => {
-        newborns.createLoads(fields["AnnoCarga"] as string, fields["MesCarga"] as string, files["Fichero"] as unknown as UploadedFile)
+        newborns.createLoads(fields["AnnoCarga"] as string, fields["MesCarga"] as string, fields["NombreCarga"] as string, files["Fichero"] as unknown as UploadedFile)
         .then(r => result.status(r.success ? STATUS_OK : STATUS_CONFLICT).send(r.msg));
     });
 });
@@ -110,7 +110,7 @@ APP.post('/newborns-data/last-load', async (request, result) => {
             ViviendaNombreMunicipio :fields["ViviendaNombreMunicipio"] as string
         };
         try {
-            let r = await db.insertNewbornForLatestLoad(getNewbornDataFromAdHoc(newborn))
+            let r = await db.insertNewbornAdHoc(getNewbornDataFromAdHoc(newborn))
             result.status(r.success ? STATUS_OK : STATUS_CONFLICT).send(JSON.stringify({count: r.count.toString()}));
         } catch(e) {
             if(e == db.NO_LOADS_ERROR) {

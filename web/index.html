@@ -172,7 +172,7 @@
                             <div class="form-group row">
                                 <label for="filter-custom-load-name" class="col-md-4 text-md-right col-form-label">Nombre Carga</label>
                                 <input id="filter-custom-load-name" name="NombreCarga" class="col-md-7 form-control"
-                                placeholder="YYYY-MM-Nombre del mes">
+                                placeholder="YYYY-III">
                             </div>
                             <div class="form-group row">
                                 <label for="filter-custom-load-year" class="col-md-4 text-md-right col-form-label">Año Carga</label>
@@ -226,6 +226,11 @@
                                 <datalist id="selector-create-load-month-options" class="form-select"></datalist>
                             </div>
                             <div class="form-group row">
+                                <label for="selector-create-load-file" class="col-md-4 text-md-right col-form-label">Identificador</label>
+                                <input id="selector-create-load-custom-name" name="NombreCarga" class="form-control col-md-7" placeholder="123">
+                                <small class="form-text text-muted mx-auto">Por ejemplo, '323' si el archivo se llama <i>NAC28005IA.323</i>. No incluya el año.</small>
+                            </div>
+                            <div class="form-group row">
                                 <label for="selector-create-load-file" class="col-md-4 text-md-right col-form-label">Fichero</label>
                                 <input id="selector-create-load-file" type="file" name="Fichero" class="form-control col-md-7">
                                 <small class="form-text text-muted mx-auto">Esta acción modificará la base de datos permanentemente.</small>
@@ -251,7 +256,7 @@
                             <div class="form-group row">
                                 <label for="selector-remove-load" class="col-md-4 text-md-right col-form-label">Nombre carga</label>
                                 <input id="selector-remove-load" list="selector-remove-load-options" name="NombreCarga" class="col-md-7 form-control",
-                                placeholder="YYYY-MM-Nombre del mes">
+                                placeholder="YYYY-III">
                                 <datalist id="selector-remove-load-options" class="form-select"></datalist>
                                 <small class="form-text text-muted mx-auto">Esta acción modificará la base de datos permanentemente.</small>
                             </div>
@@ -300,10 +305,6 @@
                                     <input id="adhoc-newborn-municipality" name="ViviendaNombreMunicipio" class="col-md-5 form-control"
                                     placeholder="Municipio" value="ALCALA DE HENARES">
                                 </div>
-                                <small class="form-text text-muted mx-auto">
-                                    El recién nacido quedará registrado como parte de la carga más reciente. Esta acción
-                                    modificará la base de datos permanentemente.
-                                </small>
                         </form>
                     </div>
                     <div class="modal-footer">

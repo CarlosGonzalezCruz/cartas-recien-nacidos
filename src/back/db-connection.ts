@@ -9,7 +9,7 @@ let mysqldb :MySQL.Connection;
 
 
 export async function open() {
-    await Promise.all([ establishOracleDBConnection(), establishMySQLConnection()]);
+    await Promise.all([establishOracleDBConnection(), establishMySQLConnection()]);
     await initTables();
     console.log("Todas las conexiones listas.");
 }
@@ -133,9 +133,7 @@ async function initTables() {
                     Madre_DNI TEXT,
                     Madre_DNI_Letra TEXT,
                     NombreCarga VARCHAR(16),
-                    AnnoCarga INTEGER,
-                    MesCarga TEXT,
-                    IdMesCarga INTEGER,
+                    FechaCarga DATE,
                     ViviendaDireccion TEXT,
                     ViviendaCodigoPostal VARCHAR(5),
                     ViviendaNombreMunicipio TEXT,

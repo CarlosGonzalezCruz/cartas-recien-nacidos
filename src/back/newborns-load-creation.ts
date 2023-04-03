@@ -2,7 +2,7 @@ import fs from "fs";
 import PersistentFile from "formidable/PersistentFile.js";
 import * as db from "./db-queries.js";
 import * as properties from "./properties.js";
-import { Newborn } from "./utils.js";
+import { Newborn, enforceTwoDigits } from "./utils.js";
 
 type LoadCreationResult = {
     success :boolean,
@@ -18,21 +18,28 @@ enum Parent {
 }
 
 export type UploadedFile = PersistentFile & {
-    filepath :string                        // Not included in library documentation, for some reason
+    filepath :string  // Not included in library documentation, for some reason
 };
 
 const MONTH_NAMES = ["<0>", "ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
 
 
-export async function createLoads(year :string | number, month :string, file :UploadedFile) :Promise<LoadCreationResult> {
+export async function createLoads(year :string | number, month :string, loadName :string | null, file :UploadedFile) :Promise<LoadCreationResult> {
     try {
-        let loadName = await generateLoadName(year, month);
-        if(typeof loadName != "string") {
-            return loadName;
+        let generatedLoadName = await generateLoadName(year, month, loadName);
+        if(typeof generatedLoadName != "string") {
+            return generatedLoadName;
         }
 
         let newborns :Newborn[] = []
         let newbornDataPromises :Promise<void>[] = [];
+        let currentDate = new Date();
+        if(!!year) {
+            currentDate.setFullYear(Number(year));
+        }
+        if(!!getMonthId(month)) {
+            currentDate.setMonth(getMonthId(month) - 1);
+        }
 
         for await(let dbNewbornData of readFileEntries(file)) {
             let newborn = {
@@ -52,10 +59,8 @@ export async function createLoads(year :string | number, month :string, file :Up
                 Madre_DNI_Extranjero: dbNewbornData.Madre_DNI_Extranjero ?? null,
                 Madre_DNI: dbNewbornData.Madre_DNI ?? null,
                 Madre_DNI_Letra: dbNewbornData.Madre_DNI_Letra ?? null,
-                NombreCarga: loadName,
-                AnnoCarga: year,
-                MesCarga: month,
-                IdMesCarga: getMonthId(month),
+                NombreCarga: generatedLoadName,
+                FechaCarga: currentDate,
                 ViviendaDireccion: null,
                 ViviendaCodigoPostal: null,
                 ViviendaNombreMunicipio: null,
@@ -73,9 +78,9 @@ export async function createLoads(year :string | number, month :string, file :Up
         }
 
         await Promise.all(newbornDataPromises);
-        let result = await db.insertNewborn(loadName, ...newborns);
+        let result = await db.insertNewborn(generatedLoadName, ...newborns);
         if(result.success) {
-            return success(`Se han añadido ${result.count} registros nuevos correspondientes a la carga ${loadName}.`);
+            return success(`Se han añadido ${result.count} registros nuevos correspondientes a la carga ${generatedLoadName}.`);
         } else {
             return failure(`Consulta la consola del servidor para más información.`);
         }
@@ -87,8 +92,13 @@ export async function createLoads(year :string | number, month :string, file :Up
 }
 
 
-async function generateLoadName(year :string | number, month :string) {
-    let loadName = `${year}-${enforceTwoDigits(getMonthId(month))}-${month.toUpperCase()}`;
+async function generateLoadName(year :string | number, month :string, requestedName :string | null = null) {
+    let loadName :string;
+    if(!!requestedName) {
+        loadName = `${year}-${requestedName}`;
+    } else {
+        loadName = `${year}-${enforceTwoDigits(getMonthId(month))}-${month.toUpperCase()}`;
+    }
     if(await db.isLoadPresent(loadName)) {
         return failure(`La carga ${loadName} ya existe.`);
     } else {
@@ -152,15 +162,6 @@ function getMonthId(name :string) {
         return selectedId;
     } else {
         throw new RangeError(`No existe el mes ${name}`);
-    }
-}
-
-
-function enforceTwoDigits(value :number) {
-    if(value < 10) {
-        return "0" + value;
-    } else {
-        return value.toString();
     }
 }
 
