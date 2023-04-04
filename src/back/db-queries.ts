@@ -1,5 +1,5 @@
 import * as db from './db-connection.js';
-import { Newborn, transcribeDateToISO } from "./utils.js";
+import { Newborn, transcribeDateToISO, getMonthId, enforceTwoDigits } from "./utils.js";
 
 export const NO_LOADS_ERROR = "No loads";
 const SORT_CRITERIA = "FechaCarga DESC, NombreCarga DESC, ViviendaCodigoPostal, ViviendaDireccion, Nacido_Nombre, Nacido_Apellido1, Nacido_Apellido2";
@@ -23,7 +23,8 @@ export async function close() {
 export async function getNewbornsFromLastLoad(): Promise<readonly Newborn[]> {
     let result = await db.performQueryMySQL(`
         SELECT * FROM CRN.${db.profileTable("NACIMIENTOS")} WHERE NombreCarga = 
-        (SELECT MAX(NombreCarga) FROM CRN.${db.profileTable("NACIMIENTOS")} WHERE NombreCarga IS NOT NULL AND FechaCarga = (SELECT MAX(FechaCarga) FROM CRN.${db.profileTable("NACIMIENTOS")}))
+        (SELECT MAX(NombreCarga) FROM CRN.${db.profileTable("NACIMIENTOS")} WHERE NombreCarga IS NOT NULL
+        AND FechaCarga = (SELECT MAX(FechaCarga) FROM CRN.${db.profileTable("NACIMIENTOS")} WHERE NombreCarga IS NOT NULL))
         ORDER BY ${SORT_CRITERIA}
     `) as Newborn[];
     lastFilterQueryResult = result;
@@ -66,11 +67,19 @@ export function getNewbornsWithIds(...id :(string | number)[]) {
 
 export async function getNewbornsWithCustomFilter(...params :[string, string][]) {
     let conditions = [];
+    let dateConstraint :{year? :string, month? :string} = {};
+    let adHocOnly = false;
     for(let p of params) {
         if(!!p[0] && !!p[1]) { // Neither string is null, undefined, or empty
+            if(p[0] == "AnnoCarga") { dateConstraint.year = p[1]; continue; }
+            if(p[0] == "MesCarga") { dateConstraint.month = p[1]; continue; }
+            if(p[0] == "SoloAdHoc") { adHocOnly = !!p[1]; continue; }
             conditions.push(`${p[0]} LIKE "%${p[1]}%"`);
         }
-        //TODO Cambiar aquí condiciones para AnnoCarga y MesCarga
+    }
+    conditions = conditions.concat(getSQLConditionFromDateConstraint(dateConstraint));
+    if(adHocOnly) {
+        conditions.push(`NombreCarga IS NULL`);
     }
     let condition = conditions.join(" AND ");
     if(!!condition) {
@@ -84,6 +93,26 @@ export async function getNewbornsWithCustomFilter(...params :[string, string][])
         return getAllNewborns();
     }
 }
+
+function getSQLConditionFromDateConstraint(dateConstraint :{year? :string, month? :string}) {
+    let conditions :string[] = [];
+    if(dateConstraint.year != null && dateConstraint.month == null) {
+        conditions.push(`FechaCarga BETWEEN '${dateConstraint.year}-01-01' AND '${dateConstraint.year}-12-31'`);
+    } else if(dateConstraint.year == null && dateConstraint.month != null) {
+        // If year is not specified, assume last matching month
+        let currentYear = new Date().getFullYear();
+        let monthNumber = getMonthId(dateConstraint.month);
+        let year = (new Date().getMonth() + 1) < monthNumber ? currentYear - 1 : currentYear; 
+        conditions.push(`FechaCarga >= '${year}-${enforceTwoDigits(monthNumber)}-01'`);
+        conditions.push(`FechaCarga < '${monthNumber == 12 ? year + 1 : year}-${enforceTwoDigits(monthNumber == 12 ? 1 : monthNumber + 1)}-01'`);
+    } else if(dateConstraint.year != null && dateConstraint.month != null) {
+        let monthNumber = getMonthId(dateConstraint.month);
+        conditions.push(`FechaCarga >= '${dateConstraint.year}-${enforceTwoDigits(monthNumber)}-01'`);
+        conditions.push(`FechaCarga < '${monthNumber == 12 ? Number(dateConstraint.year) + 1 : dateConstraint.year}-${enforceTwoDigits(monthNumber == 12 ? 1 : monthNumber + 1)}-01'`);
+    }
+    return conditions;
+}
+
 
 export function getLastFilterQueryResult() :readonly Newborn[] {
     return lastFilterQueryResult;
@@ -146,7 +175,7 @@ export async function insertNewbornAdHoc(...newborns :Newborn[]) {
 export async function getDistinctLoads() {
     return db.performQueryMySQL(
         `
-            SELECT DISTINCT(NombreCarga) FROM CRN.${db.profileTable("NACIMIENTOS")};
+            SELECT DISTINCT(NombreCarga) FROM CRN.${db.profileTable("NACIMIENTOS")} WHERE NombreCarga IS NOT NULL;
         `
     );
 }
@@ -155,8 +184,8 @@ export async function getDistinctLoads() {
 export async function getLatestLoad() {
     let query = await db.performQueryMySQL(
         `
-            SELECT NombreCarga, FechaCarga FROM CRN.${db.profileTable("NACIMIENTOS")} WHERE FechaCarga =
-            (SELECT MAX(FechaCarga) FROM CRN.${db.profileTable("NACIMIENTOS")} WHERE NombreCarga IS NOT NULL);
+            SELECT NombreCarga, FechaCarga FROM CRN.${db.profileTable("NACIMIENTOS")} WHERE NombreCarga IS NOT NULL
+            AND FechaCarga = (SELECT MAX(FechaCarga) FROM CRN.${db.profileTable("NACIMIENTOS")} WHERE NombreCarga IS NOT NULL);
         `
     );
     if(query.length == 0) {
@@ -183,6 +212,18 @@ export async function deleteLoad(loadName :string) {
             DELETE FROM CRN.${db.profileTable("NACIMIENTOS")} WHERE NombreCarga = "${loadName}";
         `
     );
+    console.log(`Eliminadas ${await lastOperationAmountOfRowsUpdated()} filas`);
+}
+
+
+export async function deleteNewbornsWithIds(...id :(string | number)[]) {
+    if(id.length == 0) {
+        return;
+    }
+    console.log(`Solicitada la eliminación de ${id.length} registros`);
+    db.performQueryMySQL(`
+        DELETE FROM CRN.${db.profileTable("NACIMIENTOS")} WHERE Id IN (${id.join(",")})
+    `);
     console.log(`Eliminadas ${await lastOperationAmountOfRowsUpdated()} filas`);
 }
 

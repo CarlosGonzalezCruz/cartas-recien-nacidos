@@ -58,6 +58,19 @@ export function getNewbornDataFromAdHoc(newborn :NewbornAdHoc) {
 }
 
 
+const MONTH_NAMES = ["<0>", "ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
+
+
+export function getMonthId(name :string) {
+    let selectedId = MONTH_NAMES.indexOf(name.toUpperCase());
+    if(selectedId != -1) {
+        return selectedId;
+    } else {
+        throw new RangeError(`No existe el mes ${name}`);
+    }
+}
+
+
 export function transcribeDateToISO(date :Date) {
     return `${date.getFullYear()}-${enforceTwoDigits(date.getMonth() + 1)}-${enforceTwoDigits(date.getDate())}`;
 }

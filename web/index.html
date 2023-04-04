@@ -12,7 +12,12 @@
     <body>
         <div class="container adjust-to-screen gy-4">
             <div class="row">
-                <h1>Gestión Cartas Recién Nacidos</h1>
+                <div class="col-md-9 d-flex flex-column flex-grow-1">
+                    <h1>Gestión Cartas Recién Nacidos</h1>
+                </div>
+                <div class="col-md-3 d-flex flex-column flex-fill text-right justify-content-end">
+                    <h5 id="profile-environment-label"></h5>
+                </div>
             </div>
             <div class="row overflow-y h-70 my-1">
                 <div class="w-100">
@@ -86,9 +91,19 @@
                                 </div>
                             </div>
                             <div>
-                                <div id="btn-remove-load" class="btn bg-red my-1 d-flex justify-content-center">
-                                    <img src="icons/file-earmark-x.svg" type="image/svg" class="svg-inverted-color">
-                                    <span class="ml-1">Eliminar carga</span>
+                                <div class="d-flex flex-row my-1 d-flex justify-content-between">
+                                    <div class="d-flex flex-grow-1 flex-column pr-1">
+                                        <div id="btn-remove-selection" class="btn bg-red">
+                                            <img src="icons/file-earmark-x.svg" type="image/svg" class="svg-inverted-color">
+                                            <span class="ml-1">Borrar selección</span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-grow-1 flex-column pl-1">
+                                        <div id="btn-remove-load" class="btn bg-red">
+                                            <img src="icons/file-earmark-x.svg" type="image/svg" class="svg-inverted-color">
+                                            <span class="ml-1">Borrar carga</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div>
@@ -175,6 +190,13 @@
                                 placeholder="YYYY-III">
                             </div>
                             <div class="form-group row">
+                                <div class="d-none d-md-block col-md-4"></div>
+                                <div class="col-md-7">
+                                    <input type="checkbox" id="filter-custom-ad-hoc" name="SoloAdHoc" class="form-check-input">
+                                    <label for="filter-custom-ad-hoc" class="form-check-label">Incluir sólo registros <i>ad hoc</i></label>
+                                </div>
+                            </div>
+                            <div class="form-group row">
                                 <label for="filter-custom-load-year" class="col-md-4 text-md-right col-form-label">Año Carga</label>
                                 <input id="filter-custom-load-year" name="AnnoCarga" class="col-md-7 form-control"
                                 placeholder="YYYY">
@@ -228,7 +250,7 @@
                             <div class="form-group row">
                                 <label for="selector-create-load-file" class="col-md-4 text-md-right col-form-label">Identificador</label>
                                 <input id="selector-create-load-custom-name" name="NombreCarga" class="form-control col-md-7" placeholder="123">
-                                <small class="form-text text-muted mx-auto">Por ejemplo, '323' si el archivo se llama <i>NAC28005IA.323</i>. No incluya el año.</small>
+                                <small class="form-text text-muted mx-auto">Por ejemplo, '323' si el archivo se llama 'NAC28005IA.323'. No incluya el año.</small>
                             </div>
                             <div class="form-group row">
                                 <label for="selector-create-load-file" class="col-md-4 text-md-right col-form-label">Fichero</label>
@@ -240,6 +262,24 @@
                     <div class="modal-footer">
                         <button class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                         <button id="btn-create-load-confirm" class="btn btn-success">Crear</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="modal-remove-selected" class="modal fade" role="dialog">
+            <div class="modal-dialog modal-md" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Eliminar seleccionados</h2>
+                    </div>
+                    <div class="modal-body">
+                        <p>Se van a eliminar los <span id="modal-remove-selected-number">0</span> registros seleccionados. ¿Seguro?</p>
+                        <small class="form-text text-muted mx-auto">Esta acción modificará la base de datos permanentemente.</small>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                        <button id="btn-remove-selected-confirm" class="btn btn-danger">Eliminar</button>
                     </div>
                 </div>
             </div>

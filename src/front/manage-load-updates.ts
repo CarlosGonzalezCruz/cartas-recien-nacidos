@@ -21,6 +21,15 @@ export async function enableLoadUpdateButtons() {
         setModalConfirmEnabled($("#btn-adhoc-registry-confirm"), validateAdHocRegistry());
         $("#modal-adhoc-registry").modal("show");
     });
+    $("#btn-remove-selection").on("click", async e => {
+        let selected = utils.getSelectedNewbornIds();
+        if(selected.length != 0) {
+            $("#modal-remove-selected-number").text(selected.length);
+            $("#modal-remove-selected").modal("show");
+        } else {
+            utils.displayMessageBox("No hay registros seleccionados. No se eliminará ningún registro.", "error");
+        }
+    })
 
     $("#btn-create-load-confirm").on("click", async e => {
         if(validateLoadCreation()) {
@@ -40,6 +49,11 @@ export async function enableLoadUpdateButtons() {
         }
     });
 
+    $("#btn-remove-selected-confirm").on("click", async e => {
+        removeSelected();
+        $("#modal-remove-selected").modal("hide");
+    });
+
     $("#btn-adhoc-registry-confirm").on("click", async e => {
         if(validateAdHocRegistry()) {
             createAdHocRegistry();
@@ -48,6 +62,10 @@ export async function enableLoadUpdateButtons() {
         } else {
             utils.displayMessageBox("Los datos introducidos no son correctos. Por favor revíselos.", "error");
         }
+    });
+
+    $("#modal-create-load input[type=file]").on("change", async e => {
+        setDefaultLoadIdentifier();
     });
 
     assignModalFocusOutEvents();
@@ -136,6 +154,21 @@ function validateAdHocRegistry() {
 }
 
 
+function setDefaultLoadIdentifier() {
+    let fileInput = $("#selector-create-load-file").get(0) as HTMLInputElement;
+    let loadedFile = fileInput.files != null ? fileInput.files[0] : null;
+    if(loadedFile == null) {
+        return;
+    }
+    if(!$("#selector-create-load-custom-name").val()) {
+        let groups = [...loadedFile.name.matchAll(/.*\.(\d+)$/g)];
+        if(groups[0]?.length >= 2) {
+            $("#selector-create-load-custom-name").val(groups[0][1]);
+        }
+    }
+}
+
+
 async function fetchPossibleLoads() {
     let fetchRequest = await fetch("/newborns-data/loads");
 
@@ -178,6 +211,29 @@ async function createLoads() {
 }
 
 
+async function createAdHocRegistry() {
+    let formData = new FormData($("#form-adhoc-registry").get(0) as HTMLFormElement);
+
+    let fetchInit = {
+        method: "post",
+        body: formData
+    };
+
+    try {
+        let fetchRequest = await fetch("/newborns-data/last-load", fetchInit);
+        if(fetchRequest.ok) {
+            let data = await fetchRequest.json();
+            utils.displayMessageBox(`Se ha creado ${data.count} registro correctamente.`, "success");
+            filters.reapplyCurrentFilter();
+        } else {
+            utils.displayMessageBox(`No se ha podido añadir el registro.`, "error");
+        }
+    } catch(error) {
+        utils.displayMessageBox(`Ha ocurrido un problema al conectar con el servidor`, "error");
+    }
+}
+
+
 async function removeLoads() {
     let formData = new FormData($("#form-remove-load").get(0) as HTMLFormElement);
     let entries = Array.from(formData.entries());
@@ -199,23 +255,20 @@ async function removeLoads() {
 }
 
 
-async function createAdHocRegistry() {
-    let formData = new FormData($("#form-adhoc-registry").get(0) as HTMLFormElement);
-
+async function removeSelected() {
     let fetchInit = {
-        method: "post",
-        body: formData
+        method: "delete",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            ids: utils.getSelectedNewbornIds()
+        })
     };
-
+    
     try {
-        let fetchRequest = await fetch("/newborns-data/last-load", fetchInit);
-        if(fetchRequest.ok) {
-            let data = await fetchRequest.json();
-            utils.displayMessageBox(`Se ha creado ${data.count} registro correctamente.`, "success");
-            filters.reapplyCurrentFilter();
-        } else {
-            utils.displayMessageBox(`No se ha podido añadir el registro.`, "error");
-        }
+        let fetchRequest = await fetch("/newborns-data/by-id", fetchInit);
+        let data = await fetchRequest.json();
+        utils.displayMessageBox(`Se han eliminado ${data.count} registros.`, data.count > 0 ? "success" : "error");
+        filters.reapplyCurrentFilter();
     } catch(error) {
         utils.displayMessageBox(`Ha ocurrido un problema al conectar con el servidor`, "error");
     }

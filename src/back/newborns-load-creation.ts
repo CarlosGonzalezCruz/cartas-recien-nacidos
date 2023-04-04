@@ -2,7 +2,7 @@ import fs from "fs";
 import PersistentFile from "formidable/PersistentFile.js";
 import * as db from "./db-queries.js";
 import * as properties from "./properties.js";
-import { Newborn, enforceTwoDigits } from "./utils.js";
+import { Newborn, enforceTwoDigits, getMonthId } from "./utils.js";
 
 type LoadCreationResult = {
     success :boolean,
@@ -20,8 +20,6 @@ enum Parent {
 export type UploadedFile = PersistentFile & {
     filepath :string  // Not included in library documentation, for some reason
 };
-
-const MONTH_NAMES = ["<0>", "ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
 
 
 export async function createLoads(year :string | number, month :string, loadName :string | null, file :UploadedFile) :Promise<LoadCreationResult> {
@@ -152,16 +150,6 @@ function* readFileEntries(file :UploadedFile) {
         }
     } catch(e) {
         throw new Error("Ha ocurrido un problema al leer el archivo de la carga.");
-    }
-}
-
-
-function getMonthId(name :string) {
-    let selectedId = MONTH_NAMES.indexOf(name.toUpperCase());
-    if(selectedId != -1) {
-        return selectedId;
-    } else {
-        throw new RangeError(`No existe el mes ${name}`);
     }
 }
 

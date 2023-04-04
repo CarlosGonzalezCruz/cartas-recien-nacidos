@@ -32,9 +32,15 @@ export async function enableFilterButtons() {
         customFilterSubmit();
     });
 
+    $("#filter-custom-ad-hoc").on("click", async e => {
+        checkLoadNameFieldBasedOnAdHoc();
+    });
+
     $("#select-all-newborns").on("change", async e => {
         toggleSelectAll();
     });
+
+    checkLoadNameFieldBasedOnAdHoc();
 }
 
 
@@ -56,6 +62,11 @@ export function applyAdHocRegistrationFilter() {
     currentFilterPath = "newborns-data/last-inserted";
     currentFilterParameters = null;
     populateWithDataFetchedFrom(currentFilterPath, currentFilterButton);
+}
+
+
+function checkLoadNameFieldBasedOnAdHoc() {
+    $("#filter-custom-load-name").prop('disabled', $("#filter-custom-ad-hoc").is(":checked"));
 }
 
 

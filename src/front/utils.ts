@@ -83,3 +83,11 @@ export function getSelectedNewbornIds() {
     })
     return ret;
 }
+
+
+export async function displayProfileEnvironmentLabel() {
+    let label = await (await fetch("profile-environment")).text();
+    if(!!label) {
+        $("#profile-environment-label").text(label);
+    }
+}

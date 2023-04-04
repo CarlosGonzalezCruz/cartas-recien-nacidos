@@ -3,6 +3,7 @@ import process from "process";
 import formidable from "formidable";
 import * as db from "./db-queries.js";
 import * as newborns from "./newborns-load-creation.js";
+import * as properties from "./properties.js";
 import { NewbornAdHoc, getNewbornDataFromAdHoc } from "./utils.js";
 import { UploadedFile } from "./newborns-load-creation.js";
 import { generateLettersForNewborns, generateListingForNewborns } from "./generate-letters.js";
@@ -34,6 +35,10 @@ APP.use(express.urlencoded({extended: true}));
 
 APP.get('/', (request, result) => {
     result.sendFile("index.html");
+});
+
+APP.get('/profile-environment', (request, result) => {
+    result.send(properties.get("Application.environment-label", ""));
 });
 
 APP.get('/newborns-data/last-load', async (request, result) => {
@@ -125,6 +130,13 @@ APP.post('/newborns-data/last-load', async (request, result) => {
 APP.delete('/newborns-data/loads', async (request, result) => {
     let loadName = request.body[0][1];
     await db.deleteLoad(loadName);
+    result.send({
+        count: await db.lastOperationAmountOfRowsUpdated(true)
+    });
+});
+
+APP.delete('/newborns-data/by-id', async (request, result) => {
+    await db.deleteNewbornsWithIds(...request.body.ids);
     result.send({
         count: await db.lastOperationAmountOfRowsUpdated(true)
     });
