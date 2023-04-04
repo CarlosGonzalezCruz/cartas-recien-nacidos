@@ -15,9 +15,7 @@ export type Newborn = {
     Madre_DNI :string | null,
     Madre_DNI_Letra :string | null,
     NombreCarga :string | null,
-    AnnoCarga :number | null,
-    MesCarga :string | null,
-    IdMesCarga :number | null,
+    FechaCarga :Date,
     ViviendaDireccion :string | null,
     ViviendaCodigoPostal :string | null,
     ViviendaNombreMunicipio :string | null,
@@ -51,12 +49,37 @@ export function getNewbornDataFromAdHoc(newborn :NewbornAdHoc) {
         Madre_DNI: null,
         Madre_DNI_Letra: null,
         NombreCarga: null,
-        AnnoCarga: null,
-        MesCarga: null,
-        IdMesCarga: null,
+        FechaCarga: new Date(),
         ViviendaDireccion: newborn.ViviendaDireccion,
         ViviendaCodigoPostal: newborn.ViviendaCodigoPostal,
         ViviendaNombreMunicipio: newborn.ViviendaNombreMunicipio,
-        ObservacionesCruce: "Registro introducido ad hoc.",
+        ObservacionesCruce: "",
     } as Newborn;
+}
+
+
+const MONTH_NAMES = ["<0>", "ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
+
+
+export function getMonthId(name :string) {
+    let selectedId = MONTH_NAMES.indexOf(name.toUpperCase());
+    if(selectedId != -1) {
+        return selectedId;
+    } else {
+        throw new RangeError(`No existe el mes ${name}`);
+    }
+}
+
+
+export function transcribeDateToISO(date :Date) {
+    return `${date.getFullYear()}-${enforceTwoDigits(date.getMonth() + 1)}-${enforceTwoDigits(date.getDate())}`;
+}
+
+
+export function enforceTwoDigits(value :number) {
+    if(value < 10) {
+        return "0" + value;
+    } else {
+        return value.toString();
+    }
 }

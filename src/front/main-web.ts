@@ -11,3 +11,4 @@ pdfs.assignButtons();
 
 utils.addModalButtonKeybinding();
 utils.preloadMsgBoxIcons();
+utils.displayProfileEnvironmentLabel();

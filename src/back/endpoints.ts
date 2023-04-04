@@ -3,6 +3,7 @@ import process from "process";
 import formidable from "formidable";
 import * as db from "./db-queries.js";
 import * as newborns from "./newborns-load-creation.js";
+import * as properties from "./properties.js";
 import { NewbornAdHoc, getNewbornDataFromAdHoc } from "./utils.js";
 import { UploadedFile } from "./newborns-load-creation.js";
 import { generateLettersForNewborns, generateListingForNewborns } from "./generate-letters.js";
@@ -34,6 +35,10 @@ APP.use(express.urlencoded({extended: true}));
 
 APP.get('/', (request, result) => {
     result.sendFile("index.html");
+});
+
+APP.get('/profile-environment', (request, result) => {
+    result.send(properties.get("Application.environment-label", ""));
 });
 
 APP.get('/newborns-data/last-load', async (request, result) => {
@@ -93,7 +98,7 @@ APP.post('/newborns-data/custom', async (request, result) => {
 APP.post('/newborns-data/loads', async (request, result) => {
     let form = formidable();
     form.parse(request, (error, fields, files) => {
-        newborns.createLoads(fields["AnnoCarga"] as string, fields["MesCarga"] as string, files["Fichero"] as unknown as UploadedFile)
+        newborns.createLoads(fields["AnnoCarga"] as string, fields["MesCarga"] as string, fields["NombreCarga"] as string, files["Fichero"] as unknown as UploadedFile)
         .then(r => result.status(r.success ? STATUS_OK : STATUS_CONFLICT).send(r.msg));
     });
 });
@@ -110,7 +115,7 @@ APP.post('/newborns-data/last-load', async (request, result) => {
             ViviendaNombreMunicipio :fields["ViviendaNombreMunicipio"] as string
         };
         try {
-            let r = await db.insertNewbornForLatestLoad(getNewbornDataFromAdHoc(newborn))
+            let r = await db.insertNewbornAdHoc(getNewbornDataFromAdHoc(newborn))
             result.status(r.success ? STATUS_OK : STATUS_CONFLICT).send(JSON.stringify({count: r.count.toString()}));
         } catch(e) {
             if(e == db.NO_LOADS_ERROR) {
@@ -125,6 +130,13 @@ APP.post('/newborns-data/last-load', async (request, result) => {
 APP.delete('/newborns-data/loads', async (request, result) => {
     let loadName = request.body[0][1];
     await db.deleteLoad(loadName);
+    result.send({
+        count: await db.lastOperationAmountOfRowsUpdated(true)
+    });
+});
+
+APP.delete('/newborns-data/by-id', async (request, result) => {
+    await db.deleteNewbornsWithIds(...request.body.ids);
     result.send({
         count: await db.lastOperationAmountOfRowsUpdated(true)
     });

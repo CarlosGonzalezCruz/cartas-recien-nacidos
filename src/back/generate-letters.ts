@@ -67,7 +67,7 @@ export async function generateListingForNewborns(...newborns :Newborn[]) {
             .map(n => [`FAMILIARES DE ${n.Nacido_Nombre} ${n.Nacido_Apellido1} ${n.Nacido_Apellido2}`, `${n.ViviendaDireccion}`, `${n.ViviendaCodigoPostal}`]);
         
         document.font("Helvetica-Bold").fontSize(24)
-            .text(`Listado Nacidos ${commonLoad.month ? commonLoad.month : "varios meses"} de ${commonLoad.year ? commonLoad.year : "varios años"}`, {align: "center", underline: true});
+            .text(`Listado Nacidos ${commonLoad ? "Carga " + commonLoad : "varias cargas"}`, {align: "center", underline: true});
         document.table({
             headers: [{label: "Nombre", width: 260}, {label: "Dirección", width: 260}, {label: "CP", width: 50}],
             rows: rows
@@ -93,28 +93,18 @@ function generateEnvelope(document :PDFKit.PDFDocument, newborn :Newborn) {
 
 
 function determineNewbornsCommonLoad(...newborns :Newborn[]) {
-
-    let sharedMonth :string | null | "many" = null;
-    let sharedYear :number | null | "many" = null;
+    let sharedLoad :string | null = null;
 
     for(let newborn of newborns) {
-        if(sharedMonth == null && newborn.MesCarga) {
-            sharedMonth = newborn.MesCarga;
-        } else if(sharedMonth != null && sharedMonth != "many" && newborn.MesCarga && sharedMonth != newborn.MesCarga) {
-            sharedMonth = "many";
-        }
-
-        if(sharedYear == null && newborn.AnnoCarga) {
-            sharedYear = newborn.AnnoCarga;
-        } else if(sharedYear != null && sharedYear != "many" && newborn.AnnoCarga && sharedYear != newborn.AnnoCarga) {
-            sharedYear = "many";
+        if(sharedLoad == null) {
+            sharedLoad = newborn.NombreCarga;
+        } else if(sharedLoad != newborn.NombreCarga) {
+            sharedLoad = null;
+            break;
         }
     }
 
-    return {
-        month: sharedMonth != "many" ? sharedMonth : null,
-        year: sharedYear != "many" ? sharedYear : null
-    };
+    return sharedLoad;
 }
 
 
