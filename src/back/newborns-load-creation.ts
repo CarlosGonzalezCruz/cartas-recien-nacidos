@@ -35,8 +35,9 @@ export async function createLoads(year :string | number, month :string, loadName
         if(!!year) {
             currentDate.setFullYear(Number(year));
         }
-        if(!!getMonthId(month)) {
-            currentDate.setMonth(getMonthId(month) - 1);
+        let monthId = getMonthId(month);
+        if(!!monthId) {
+            currentDate.setMonth(monthId - 1);
         }
 
         for await(let dbNewbornData of readFileEntries(file)) {
@@ -95,7 +96,8 @@ async function generateLoadName(year :string | number, month :string, requestedN
     if(!!requestedName) {
         loadName = `${year}-${requestedName}`;
     } else {
-        loadName = `${year}-${enforceTwoDigits(getMonthId(month))}-${month.toUpperCase()}`;
+        let monthId = getMonthId(month);
+        loadName = `${year}-${!!monthId ? enforceTwoDigits(monthId) : 'N/A'}-${month.toUpperCase()}`;
     }
     if(await db.isLoadPresent(loadName)) {
         return failure(`La carga ${loadName} ya existe.`);

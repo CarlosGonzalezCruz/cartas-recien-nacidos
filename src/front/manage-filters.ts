@@ -28,6 +28,10 @@ export async function enableFilterButtons() {
         $("#modal-filter-custom").modal("show");
     });
 
+    $("#btn-filter-custom-clear").on("click", async e => {
+        customFilterClear();
+    });
+
     $("#btn-filter-custom-search").on("click", async e => {
         customFilterSubmit();
     });
@@ -70,6 +74,15 @@ function checkLoadNameFieldBasedOnAdHoc() {
 }
 
 
+function customFilterClear() {
+    $("#modal-filter-custom input:not(:checkbox)").val("");
+    $("#modal-filter-custom input:checkbox").prop({
+        checked: false
+    });
+    checkLoadNameFieldBasedOnAdHoc();
+}
+
+
 function customFilterSubmit() {
     let formData = new FormData($("#form-filter-custom").get(0) as HTMLFormElement);
     populateWithDataFetchedFrom("newborns-data/custom", $("#btn-filter-custom"), Array.from(formData.entries()));
@@ -98,6 +111,10 @@ async function populateWithDataFetchedFrom(path :string, button :JQuery<HTMLElem
 
     try {
         let fetchResult = await fetch(path, fetchInit);
+        if(fetchResult.status == 400) {
+            utils.displayMessageBox("La búsqueda personalizada no ha podido realizarse. Es posible que los datos hayan sido introducidos incorrectamente.", "error");
+            return;
+        }
         let data = await fetchResult.json();
         displayedRows = data.length;
         populateTable(data);
