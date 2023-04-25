@@ -92,7 +92,12 @@ APP.post('/newborns-data/listing', async (request, result) => {
 });
 
 APP.post('/newborns-data/custom', async (request, result) => {
-    result.send(await db.getNewbornsWithCustomFilter(...request.body));
+    try {
+        result.send(await db.getNewbornsWithCustomFilter(...request.body));
+    } catch(e) {
+        console.error(`Ha ocurrido un error en la búsqueda personalizada: ${e}`);
+        result.writeHead(400).end();
+    }
 });
 
 APP.post('/newborns-data/loads', async (request, result) => {
