@@ -62,11 +62,15 @@ const MONTH_NAMES = ["<0>", "ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO
 
 
 export function getMonthId(name :string) {
+    if(!isNaN(parseInt(name))) { // Month was given as a number
+        let selectedId = parseInt(name);
+        return selectedId >= 1 && selectedId <= 12 ? selectedId : null;
+    }
     let selectedId = MONTH_NAMES.indexOf(name.toUpperCase());
     if(selectedId != -1) {
         return selectedId;
     } else {
-        throw new RangeError(`No existe el mes ${name}`);
+        return null;
     }
 }
 

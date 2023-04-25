@@ -102,13 +102,24 @@ function getSQLConditionFromDateConstraint(dateConstraint :{year? :string, month
         // If year is not specified, assume last matching month
         let currentYear = new Date().getFullYear();
         let monthNumber = getMonthId(dateConstraint.month);
-        let year = (new Date().getMonth() + 1) < monthNumber ? currentYear - 1 : currentYear; 
-        conditions.push(`FechaCarga >= '${year}-${enforceTwoDigits(monthNumber)}-01'`);
-        conditions.push(`FechaCarga < '${monthNumber == 12 ? year + 1 : year}-${enforceTwoDigits(monthNumber == 12 ? 1 : monthNumber + 1)}-01'`);
+        let year = currentYear;
+        if(!!monthNumber) {
+            year = (new Date().getMonth() + 1) < monthNumber ? currentYear - 1 : currentYear; 
+            conditions.push(`FechaCarga >= '${year}-${enforceTwoDigits(monthNumber)}-01'`);
+            conditions.push(`FechaCarga < '${monthNumber == 12 ? year + 1 : year}-${enforceTwoDigits(monthNumber == 12 ? 1 : monthNumber + 1)}-01'`);
+        } else {
+            conditions.push(`FechaCarga >= '${year}-01-01'`);
+            conditions.push(`FechaCarga < '${year}-12-01'`);
+        }
     } else if(dateConstraint.year != null && dateConstraint.month != null) {
         let monthNumber = getMonthId(dateConstraint.month);
-        conditions.push(`FechaCarga >= '${dateConstraint.year}-${enforceTwoDigits(monthNumber)}-01'`);
-        conditions.push(`FechaCarga < '${monthNumber == 12 ? Number(dateConstraint.year) + 1 : dateConstraint.year}-${enforceTwoDigits(monthNumber == 12 ? 1 : monthNumber + 1)}-01'`);
+        if(!!monthNumber) {
+            conditions.push(`FechaCarga >= '${dateConstraint.year}-${enforceTwoDigits(monthNumber)}-01'`);
+            conditions.push(`FechaCarga < '${monthNumber == 12 ? Number(dateConstraint.year) + 1 : dateConstraint.year}-${enforceTwoDigits(monthNumber == 12 ? 1 : monthNumber + 1)}-01'`);
+        } else {
+            conditions.push(`FechaCarga >= '${dateConstraint.year}-01-01'`);
+            conditions.push(`FechaCarga < '${dateConstraint.year}-12-01'`);
+        }
     }
     return conditions;
 }
