@@ -64,19 +64,23 @@ const MONTH_NAMES = ["<0>", "ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO
 export function getMonthId(name :string) {
     if(!isNaN(parseInt(name))) { // Month was given as a number
         let selectedId = parseInt(name);
-        return selectedId >= 1 && selectedId <= 12 ? selectedId : null;
+        if(selectedId < 1 || selectedId > 12) {
+            throw new Error(`'${name}' no es un mes válido.`);
+        }
+        return selectedId;
     }
     let selectedId = MONTH_NAMES.indexOf(name.toUpperCase());
     if(selectedId != -1) {
         return selectedId;
     } else {
-        return null;
+        throw new Error(`'${name}' no es un mes válido.`);
     }
 }
 
 
-export function transcribeDateToISO(date :Date) {
-    return `${date.getFullYear()}-${enforceTwoDigits(date.getMonth() + 1)}-${enforceTwoDigits(date.getDate())}`;
+export function transcribeDateToISO(date :Date, includeTimeOfDay :boolean = false) {
+    return `${date.getFullYear()}-${enforceTwoDigits(date.getMonth() + 1)}-${enforceTwoDigits(date.getDate())}`
+        + (includeTimeOfDay ? ` ${enforceTwoDigits(date.getHours())}:${enforceTwoDigits(date.getMinutes())}:${enforceTwoDigits(date.getSeconds())}` : ``);
 }
 
 

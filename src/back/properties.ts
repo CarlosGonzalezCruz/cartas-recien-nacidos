@@ -17,6 +17,7 @@ export function initProperties() {
     }
 
     let profileFilename = profile.endsWith(".ini") ? profile : `${profile}.ini`;
+    console.log(`Iniciando el programa con la configuración ${profileFilename}...`);
     let success = false;
     for(let directory of PATH) {
         try {

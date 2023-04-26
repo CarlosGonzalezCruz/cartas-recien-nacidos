@@ -95,6 +95,9 @@ export async function getNewbornsWithCustomFilter(...params :[string, string][])
 }
 
 function getSQLConditionFromDateConstraint(dateConstraint :{year? :string, month? :string}) {
+    if(dateConstraint.year != null && isNaN(Number(dateConstraint.year))) {
+        throw new Error(`'${dateConstraint.year}' no es un año válido.`);
+    }
     let conditions :string[] = [];
     if(dateConstraint.year != null && dateConstraint.month == null) {
         conditions.push(`FechaCarga BETWEEN '${dateConstraint.year}-01-01' AND '${dateConstraint.year}-12-31'`);
@@ -103,23 +106,13 @@ function getSQLConditionFromDateConstraint(dateConstraint :{year? :string, month
         let currentYear = new Date().getFullYear();
         let monthNumber = getMonthId(dateConstraint.month);
         let year = currentYear;
-        if(!!monthNumber) {
-            year = (new Date().getMonth() + 1) < monthNumber ? currentYear - 1 : currentYear; 
-            conditions.push(`FechaCarga >= '${year}-${enforceTwoDigits(monthNumber)}-01'`);
-            conditions.push(`FechaCarga < '${monthNumber == 12 ? year + 1 : year}-${enforceTwoDigits(monthNumber == 12 ? 1 : monthNumber + 1)}-01'`);
-        } else {
-            conditions.push(`FechaCarga >= '${year}-01-01'`);
-            conditions.push(`FechaCarga < '${year}-12-01'`);
-        }
+        year = (new Date().getMonth() + 1) < monthNumber ? currentYear - 1 : currentYear; 
+        conditions.push(`FechaCarga >= '${year}-${enforceTwoDigits(monthNumber)}-01'`);
+        conditions.push(`FechaCarga < '${monthNumber == 12 ? year + 1 : year}-${enforceTwoDigits(monthNumber == 12 ? 1 : monthNumber + 1)}-01'`);
     } else if(dateConstraint.year != null && dateConstraint.month != null) {
         let monthNumber = getMonthId(dateConstraint.month);
-        if(!!monthNumber) {
-            conditions.push(`FechaCarga >= '${dateConstraint.year}-${enforceTwoDigits(monthNumber)}-01'`);
-            conditions.push(`FechaCarga < '${monthNumber == 12 ? Number(dateConstraint.year) + 1 : dateConstraint.year}-${enforceTwoDigits(monthNumber == 12 ? 1 : monthNumber + 1)}-01'`);
-        } else {
-            conditions.push(`FechaCarga >= '${dateConstraint.year}-01-01'`);
-            conditions.push(`FechaCarga < '${dateConstraint.year}-12-01'`);
-        }
+        conditions.push(`FechaCarga >= '${dateConstraint.year}-${enforceTwoDigits(monthNumber)}-01'`);
+        conditions.push(`FechaCarga < '${monthNumber == 12 ? Number(dateConstraint.year) + 1 : dateConstraint.year}-${enforceTwoDigits(monthNumber == 12 ? 1 : monthNumber + 1)}-01'`);
     }
     return conditions;
 }

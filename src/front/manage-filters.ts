@@ -111,11 +111,11 @@ async function populateWithDataFetchedFrom(path :string, button :JQuery<HTMLElem
 
     try {
         let fetchResult = await fetch(path, fetchInit);
+        let data = await fetchResult.json();
         if(fetchResult.status == 400) {
-            utils.displayMessageBox("La búsqueda personalizada no ha podido realizarse. Es posible que los datos hayan sido introducidos incorrectamente.", "error");
+            utils.displayMessageBox(data.message, "error");
             return;
         }
-        let data = await fetchResult.json();
         displayedRows = data.length;
         populateTable(data);
         $("#newborns-table-body :checkbox").on("change", async e => {

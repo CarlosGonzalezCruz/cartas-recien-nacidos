@@ -1,0 +1,67 @@
+import fs from "fs";
+import process from "process";
+import child_process from "child_process";
+import { transcribeDateToISO } from "./utils.js";
+import * as properties from "./properties.js";
+
+
+const EXIT_OR_RESTART_DELAY_MS = 2000;
+let logFile :fs.WriteStream | null = null;
+let logEndListener = () => logFile?.end();
+
+export function setup() {
+    if(properties.get("Log.path", "") != "") {
+        logFile = fs.createWriteStream(properties.get<string>("Log.path"), {flags: "a"});
+    }
+    
+    console.log("-----------------------------");
+    logFile?.write("-----------------------------\n");
+
+    let defaultConsoleLog = console.log;
+    let defaultConsoleWarn = console.warn;
+    let defaultConsoleError = console.error;
+    console.log = function(...data :any[]) {
+        doLog(defaultConsoleLog, ...data);
+    }
+    console.warn = function(...data :any[]) {
+        doLog(defaultConsoleWarn, ...data);
+    }
+    console.error = function(...data :any[]) {
+        doLog(defaultConsoleError, ...data);
+    }
+
+    process.on("uncaughtException", (e) => {
+        console.error(`Excepción no capturada: ${e.stack}`);
+        setTimeout(() => {
+            if(properties.get("Log.restart-on-uncaught-ex", false)) {
+                restartApplication();
+            } else {
+                process.exit();
+            }
+        }, EXIT_OR_RESTART_DELAY_MS);
+    });
+
+    process.on("exit", logEndListener);
+}
+
+
+function doLog(logFunction :(...data :any[]) => void, ...data :any[]) {
+    let message = `[${transcribeDateToISO(new Date(), true)}] ${data.join(' ')}`
+    logFunction(message);
+    logFile?.write(message + "\n");
+}
+
+
+function restartApplication() {
+    process.off("exit", logEndListener);
+    process.on("exit", () => {
+        console.error("Se va a intentar reiniciar la aplicación...");
+        child_process.spawn(process.argv.shift() + "", process.argv, {
+            cwd: process.cwd(),
+            detached: true,
+            stdio: "inherit"
+        });
+        logFile?.end();
+    });
+    process.exit();
+}
