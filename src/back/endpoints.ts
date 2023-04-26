@@ -25,7 +25,7 @@ export async function listen(port :number) {
 process.on("SIGINT", async () => {
     await db.close();
     console.log("Hasta luego");
-    process.exit();
+    setTimeout(process.exit, 500);
 });
 
 APP.use(express.static("web"));
@@ -95,8 +95,7 @@ APP.post('/newborns-data/custom', async (request, result) => {
     try {
         result.send(await db.getNewbornsWithCustomFilter(...request.body));
     } catch(e) {
-        console.error(`Ha ocurrido un error en la búsqueda personalizada: ${e}`);
-        result.writeHead(400).end();
+        result.status(400).send({ message: `Ha ocurrido un problema con la búsqueda: ${e.message}` });
     }
 });
 
