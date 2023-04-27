@@ -16,16 +16,20 @@ const STATUS_CONFLICT = 409;
 const STATUS_UNHANDLED_ERROR = 500;
 
 export async function listen(port :number) {
-    await db.open();
+    await db.openMySQL();
     APP.listen(port, () => {
         console.log(`Atendiendo al puerto ${port}...`);
     });
 }
 
 process.on("SIGINT", async () => {
-    await db.close();
+    await db.closeAll();
     console.log("Hasta luego");
     setTimeout(process.exit, 500);
+});
+
+process.on("exit", async () => {
+    await db.closeAll(); // In case it wasn't properly closed on SIGINT
 });
 
 APP.use(express.static("web"));

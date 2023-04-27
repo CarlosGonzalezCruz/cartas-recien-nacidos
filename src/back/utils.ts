@@ -1,4 +1,4 @@
-
+import child_process from "child_process";
 
 export type Newborn = {
     Nacido_Fecha :Date | null,
@@ -90,4 +90,16 @@ export function enforceTwoDigits(value :number) {
     } else {
         return value.toString();
     }
+}
+
+
+export function restartApplication() {
+    process.on("exit", () => {
+        child_process.spawn(process.argv.shift() + "", process.argv, {
+            cwd: process.cwd(),
+            detached: true,
+            stdio: "inherit"
+        });
+    });
+    process.exit();
 }

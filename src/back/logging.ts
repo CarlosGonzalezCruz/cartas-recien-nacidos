@@ -1,7 +1,6 @@
 import fs from "fs";
 import process from "process";
-import child_process from "child_process";
-import { transcribeDateToISO } from "./utils.js";
+import { transcribeDateToISO, restartApplication } from "./utils.js";
 import * as properties from "./properties.js";
 
 
@@ -34,6 +33,9 @@ export function setup() {
         console.error(`Excepción no capturada: ${e.stack}`);
         setTimeout(() => {
             if(properties.get("Log.restart-on-uncaught-ex", false)) {
+                process.off("exit", logEndListener);
+                console.error("Se va a intentar reiniciar la aplicación...");
+                logFile?.end();
                 restartApplication();
             } else {
                 process.exit();
@@ -49,19 +51,4 @@ function doLog(logFunction :(...data :any[]) => void, ...data :any[]) {
     let message = `[${transcribeDateToISO(new Date(), true)}] ${data.join(' ')}`
     logFunction(message);
     logFile?.write(message + "\n");
-}
-
-
-function restartApplication() {
-    process.off("exit", logEndListener);
-    process.on("exit", () => {
-        console.error("Se va a intentar reiniciar la aplicación...");
-        child_process.spawn(process.argv.shift() + "", process.argv, {
-            cwd: process.cwd(),
-            detached: true,
-            stdio: "inherit"
-        });
-        logFile?.end();
-    });
-    process.exit();
 }
