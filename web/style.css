@@ -78,6 +78,10 @@
     background-color: black;
 }
 
+.btn:hover:not(.btn-active):not(.btn-link) {
+    color: white;
+}
+
 .svg-inverted-color {
     filter: invert(1)
 }
