@@ -22,10 +22,23 @@ export type UploadedFile = PersistentFile & {
 };
 
 
+let busy = false; // This variable prevents the user from running multiple load creation queries simultaneously
+
 export async function createLoads(year :string | number, month :string, loadName :string | null, file :UploadedFile) :Promise<LoadCreationResult> {
+    if(busy) {
+        return failure("Hay otra carga en proceso. Inténtelo de nuevo dentro de unos segundos.");
+    }
+    busy = true;
+    let connectionSuccess = await db.openOracleDB();
+    if(!connectionSuccess) {
+        db.closeOracleDB();
+        busy = false;
+        return failure("La base de datos no está disponible en estos momentos.");
+    }
     try {
         let generatedLoadName = await generateLoadName(year, month, loadName);
         if(typeof generatedLoadName != "string") {
+            busy = false;
             return generatedLoadName;
         }
 
@@ -78,6 +91,8 @@ export async function createLoads(year :string | number, month :string, loadName
 
         await Promise.all(newbornDataPromises);
         let result = await db.insertNewborn(generatedLoadName, ...newborns);
+        db.closeOracleDB()
+        busy = false;
         if(result.success) {
             return success(`Se han añadido ${result.count} registros nuevos correspondientes a la carga ${generatedLoadName}.`);
         } else {
@@ -85,9 +100,10 @@ export async function createLoads(year :string | number, month :string, loadName
         }
     } catch(e) {
         console.error(`${e}`);
+        db.closeOracleDB();
+        busy = false;
         return failure(`Consulta la consola del servidor para más información.`);
     }
-    
 }
 
 

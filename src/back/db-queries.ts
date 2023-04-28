@@ -12,13 +12,22 @@ type Load = {
 let lastFilterQueryResult :Newborn[] = [];
 let cachedAmountOfRowsUpdated :number | null = null;  // Necessary because MySQL resets ROW_COUNT() after the first query
 
-export function open() {
-    return db.open();
+export function openMySQL() {
+    return db.openMySQL();
 }
 
-export async function close() {
-    await db.close();
+export function openOracleDB() {
+    return db.openOracleDB();
 }
+
+export function closeOracleDB() {
+    return db.closeOracleDB();
+}
+
+export function closeAll() {
+    return db.closeAll();
+}
+
 
 export async function getNewbornsFromLastLoad(): Promise<readonly Newborn[]> {
     let result = await db.performQueryMySQL(`
@@ -88,7 +97,7 @@ export async function getNewbornsWithCustomFilter(...params :[string, string][])
             ORDER BY ${SORT_CRITERIA}
         `) as Newborn[];
         lastFilterQueryResult = result;
-        return result;    
+        return result;
     } else {
         return getAllNewborns();
     }
@@ -249,7 +258,7 @@ export async function lastOperationAmountOfRowsUpdated(preferCached = false) {
 
 
 export async function getAddressByIdDocument(identifier :string, validator :string | null) {
-    let query = await db.performQueryOracleDb(
+    let query = await db.performQueryOracleDB(
         `
         SELECT DIRTOTDIR, DIRCODPOS, DIRNOMMUN
         FROM REPOS.PMH_HABITANTE H

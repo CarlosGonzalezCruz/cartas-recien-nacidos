@@ -1,4 +1,5 @@
 import { populateTable } from "./newborns-table-populate.js";
+import * as msg from "./message-box.js";
 import * as utils from "./utils.js";
 
 
@@ -91,6 +92,7 @@ function customFilterSubmit() {
 
 
 async function populateWithDataFetchedFrom(path :string, button :JQuery<HTMLElement>, postBody? :any) {
+    let loadingHandler = msg.displayLoadingBox("Buscando registros...");
     filterButtons.removeClass("btn-active");
     filterButtons.addClass("btn-inactive");
     button.removeClass("btn-inactive");
@@ -113,8 +115,11 @@ async function populateWithDataFetchedFrom(path :string, button :JQuery<HTMLElem
         let fetchResult = await fetch(path, fetchInit);
         let data = await fetchResult.json();
         if(fetchResult.status == 400) {
-            utils.displayMessageBox(data.message, "error");
+            await utils.concludeAndWait(loadingHandler);
+            msg.displayMessageBox(data.message, "error");
             return;
+        } else {
+            loadingHandler.conclude();
         }
         displayedRows = data.length;
         populateTable(data);
@@ -123,7 +128,8 @@ async function populateWithDataFetchedFrom(path :string, button :JQuery<HTMLElem
         });
         recalculateSelectAllCheckbox();
     } catch(error) {
-        utils.displayMessageBox("Ha ocurrido un problema al conectar con el servidor.", "error");
+        await utils.concludeAndWait(loadingHandler);
+        msg.displayMessageBox("Ha ocurrido un problema al conectar con el servidor.", "error");
     }
 }
 

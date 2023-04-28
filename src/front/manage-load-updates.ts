@@ -1,4 +1,5 @@
 import * as filters from "./manage-filters.js";
+import { displayMessageBox, displayLoadingBox } from "./message-box.js";
 import * as utils from "./utils.js";
 
 
@@ -27,7 +28,7 @@ export async function enableLoadUpdateButtons() {
             $("#modal-remove-selected-number").text(selected.length);
             $("#modal-remove-selected").modal("show");
         } else {
-            utils.displayMessageBox("No hay registros seleccionados. No se eliminará ningún registro.", "error");
+            displayMessageBox("No hay registros seleccionados. No se eliminará ningún registro.", "error");
         }
     })
 
@@ -36,7 +37,7 @@ export async function enableLoadUpdateButtons() {
             createLoads();
             $("#modal-create-load").modal("hide");
         } else {
-            utils.displayMessageBox("Los datos introducidos no son correctos. Por favor revíselos.", "error");
+            displayMessageBox("Los datos introducidos no son correctos. Por favor revíselos.", "error");
         }
     });
 
@@ -45,7 +46,7 @@ export async function enableLoadUpdateButtons() {
             removeLoads();
             $("#modal-remove-load").modal("hide");
         } else {
-            utils.displayMessageBox("La carga introducida no existe. Por favor revise que la ha escrito correctamente.", "error");
+            displayMessageBox("La carga introducida no existe. Por favor revise que la ha escrito correctamente.", "error");
         }
     });
 
@@ -60,7 +61,7 @@ export async function enableLoadUpdateButtons() {
             $("#modal-adhoc-registry").modal("hide");
             filters.applyAdHocRegistrationFilter();
         } else {
-            utils.displayMessageBox("Los datos introducidos no son correctos. Por favor revíselos.", "error");
+            displayMessageBox("Los datos introducidos no son correctos. Por favor revíselos.", "error");
         }
     });
 
@@ -189,6 +190,8 @@ async function fetchPossibleLoads() {
 
 
 async function createLoads() {
+    let loadingHandler = displayLoadingBox("Añadiendo los registros...");
+
     let formData = new FormData($("#form-create-load").get(0) as HTMLFormElement);
 
     let fetchInit = {
@@ -200,18 +203,24 @@ async function createLoads() {
         let fetchRequest = await fetch("/newborns-data/loads", fetchInit);
         let msg = await fetchRequest.text();
         if(fetchRequest.ok) {
-            utils.displayMessageBox(msg, "success");
+            await utils.concludeAndWait(loadingHandler);
+            displayMessageBox(msg, "success");
             filters.reapplyCurrentFilter();
         } else {
-            utils.displayMessageBox(`No se ha podido crear la carga: ${msg}`, "error");
+            await utils.concludeAndWait(loadingHandler);
+            displayMessageBox(`No se ha podido crear la carga: ${msg}`, "error");
         }
     } catch(error) {
-        utils.displayMessageBox(`Ha ocurrido un problema al conectar con el servidor`, "error");
+        await utils.concludeAndWait(loadingHandler);
+        displayMessageBox(`Ha ocurrido un problema al conectar con el servidor`, "error");
+        
     }
 }
 
 
 async function createAdHocRegistry() {
+    let loadingHandler = displayLoadingBox("Añadiendo el registro...");
+
     let formData = new FormData($("#form-adhoc-registry").get(0) as HTMLFormElement);
 
     let fetchInit = {
@@ -223,18 +232,23 @@ async function createAdHocRegistry() {
         let fetchRequest = await fetch("/newborns-data/last-load", fetchInit);
         if(fetchRequest.ok) {
             let data = await fetchRequest.json();
-            utils.displayMessageBox(`Se ha creado ${data.count} registro correctamente.`, "success");
+            await utils.concludeAndWait(loadingHandler);
+            displayMessageBox(`Se ha creado ${data.count} registro correctamente.`, "success");
             filters.reapplyCurrentFilter();
         } else {
-            utils.displayMessageBox(`No se ha podido añadir el registro.`, "error");
+            await utils.concludeAndWait(loadingHandler);
+            displayMessageBox(`No se ha podido añadir el registro.`, "error");
         }
     } catch(error) {
-        utils.displayMessageBox(`Ha ocurrido un problema al conectar con el servidor`, "error");
+        await utils.concludeAndWait(loadingHandler);
+        displayMessageBox(`Ha ocurrido un problema al conectar con el servidor`, "error");
     }
 }
 
 
 async function removeLoads() {
+    let loadingHandler = displayLoadingBox("Eliminando los registros...");
+
     let formData = new FormData($("#form-remove-load").get(0) as HTMLFormElement);
     let entries = Array.from(formData.entries());
 
@@ -247,15 +261,19 @@ async function removeLoads() {
     try {
         let fetchRequest = await fetch("/newborns-data/loads", fetchInit);
         let data = await fetchRequest.json();
-        utils.displayMessageBox(`Se han eliminado ${data.count} registros.`, data.count > 0 ? "success" : "error");
+        await utils.concludeAndWait(loadingHandler);
+        displayMessageBox(`Se han eliminado ${data.count} registros.`, data.count > 0 ? "success" : "error");
         filters.reapplyCurrentFilter();
     } catch(error) {
-        utils.displayMessageBox(`Ha ocurrido un problema al conectar con el servidor`, "error");
+        await utils.concludeAndWait(loadingHandler);
+        displayMessageBox(`Ha ocurrido un problema al conectar con el servidor`, "error");
     }
 }
 
 
 async function removeSelected() {
+    let loadingHandler = displayLoadingBox("Eliminando los registros...");
+
     let fetchInit = {
         method: "delete",
         headers: {"Content-Type": "application/json"},
@@ -267,9 +285,11 @@ async function removeSelected() {
     try {
         let fetchRequest = await fetch("/newborns-data/by-id", fetchInit);
         let data = await fetchRequest.json();
-        utils.displayMessageBox(`Se han eliminado ${data.count} registros.`, data.count > 0 ? "success" : "error");
+        await utils.concludeAndWait(loadingHandler);
+        displayMessageBox(`Se han eliminado ${data.count} registros.`, data.count > 0 ? "success" : "error");
         filters.reapplyCurrentFilter();
     } catch(error) {
-        utils.displayMessageBox(`Ha ocurrido un problema al conectar con el servidor`, "error");
+        await utils.concludeAndWait(loadingHandler);
+        displayMessageBox(`Ha ocurrido un problema al conectar con el servidor`, "error");
     }
 }

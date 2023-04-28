@@ -3,22 +3,54 @@ import MySQL from "mysql";
 import * as properties from "./properties.js";
 
 
-const DB_PATH = "./db/nacimientos";
-let oracledb :OracleDB.Connection;
+let oracledb :OracleDB.Connection | null;
+let oracledbCloseTimeout :NodeJS.Timeout | null;
 let mysqldb :MySQL.Connection;
 
 
-export async function open() {
-    await Promise.all([establishOracleDBConnection(), establishMySQLConnection()]);
+export async function openMySQL() {
+    await establishMySQLConnection();
     await initTables();
-    console.log("Todas las conexiones listas.");
 }
 
 
-export async function close() {
+export async function openOracleDB() {
+    let success :boolean;
+    try {
+        if(!!oracledb) {
+            closeOracleDB();
+        }
+        await establishOracleDBConnection();
+        if(!!properties.get("Oracle.timeout-ms", 0)) {
+            oracledbCloseTimeout = setTimeout(closeOracleDB, properties.get<number>("Oracle.timeout-ms"));
+        }
+        success = true;
+    } catch(e) {
+        console.error(e.message);
+        success = false;
+    }
+    return success;
+}
+
+
+export async function closeOracleDB() {
+    if(!oracledb) {
+        return;
+    }
+    await oracledb.close();
+    oracledb = null;
+    console.log("Conexión terminada con Oracle DB.");
+    if(!!oracledbCloseTimeout) {
+        clearTimeout(oracledbCloseTimeout);
+        oracledbCloseTimeout = null;
+    }
+}
+
+
+export async function closeAll() {
     await Promise.all([
         console.log(`La conexión con MySQL se cerrará automáticamente.`),
-        new Promise<void>(r => oracledb.close().then(() => {console.log(`Conexión terminada con Oracle DB.`); r()}))
+        closeOracleDB()
     ]);
 }
 
@@ -42,7 +74,15 @@ export async function performQueryMySQL(query :string) :Promise<any> {
 }
 
 
-export async function performQueryOracleDb(query :string) {
+export async function performQueryOracleDB(query :string) {
+    if(!oracledb) {
+        console.error("No hay conexión con Oracle DB");
+        return null;
+    }
+    if(!!oracledbCloseTimeout) {
+        clearTimeout(oracledbCloseTimeout);
+        oracledbCloseTimeout = setTimeout(closeOracleDB, properties.get("Oracle.timeout-ms", 0));
+    }
     return oracledb.execute(query);
 }
 
