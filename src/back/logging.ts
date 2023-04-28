@@ -4,13 +4,17 @@ import { transcribeDateToISO, restartApplication } from "./utils.js";
 import * as properties from "./properties.js";
 
 
-const EXIT_OR_RESTART_DELAY_MS = 2000;
+const RESTART_DELAY_MS = 2000;
 let logFile :fs.WriteStream | null = null;
 let logEndListener = () => logFile?.end();
 
 export function setup() {
     if(properties.get("Log.path", "") != "") {
-        logFile = fs.createWriteStream(properties.get<string>("Log.path"), {flags: "a"});
+        try {
+            logFile = fs.createWriteStream(properties.get<string>("Log.path"), {flags: "a"});
+        } catch(e) {
+            console.error(`No se ha podido abrir el archivo especificado para logs. Causa: ${e}`);
+        }
     }
     
     console.log("-----------------------------");
@@ -37,10 +41,8 @@ export function setup() {
                 console.error("Se va a intentar reiniciar la aplicación...");
                 logFile?.end();
                 restartApplication();
-            } else {
-                process.exit();
             }
-        }, EXIT_OR_RESTART_DELAY_MS);
+        }, RESTART_DELAY_MS);
     });
 
     process.on("exit", logEndListener);
