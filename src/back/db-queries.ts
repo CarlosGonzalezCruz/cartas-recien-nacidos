@@ -150,7 +150,7 @@ export async function insertNewborn(loadName :string | null, ...newborns :Newbor
     let query_rows :string[] = [];
     for(let entry of newborns) {
         let fields = Array.from(Object.keys(entry), key => 
-            typeof entry[key] == "string" ? `"${entry[key].toUpperCase()}"` :
+            typeof entry[key] == "string" ? `"${entry[key].replaceAll('\"', '\\\"').toUpperCase()}"` :
             entry[key] instanceof Date ? `"${transcribeDateToISO(entry[key])}"` :
             entry[key] == null ? "NULL" :
             entry[key]);
