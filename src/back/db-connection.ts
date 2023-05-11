@@ -5,7 +5,10 @@ import * as properties from "./properties.js";
 
 let oracledb :OracleDB.Connection | null;
 let oracledbCloseTimeout :NodeJS.Timeout | null;
-let mysqldb :MySQL.Connection;
+let mysqldb :MySQL.Pool;
+
+let mysqldbLastRowCount = 0;
+let mysqldbLastInsertedId = -1;
 
 
 export async function openMySQL() {
@@ -61,14 +64,37 @@ export function profileTable(tableName :string) {
 }
 
 
-export async function performQueryMySQL(query :string) :Promise<any> {
+export function getMySQLLastRowCount() {
+    return mysqldbLastRowCount;
+}
+
+
+export function getMySQLLastInsertedId() {
+    return mysqldbLastInsertedId;
+}
+
+
+export async function performQueryMySQL(query :string, updateMetaResults = false) :Promise<any> {
      return new Promise((resolve, reject) => {
-        mysqldb.query(query, (error, result) => {
+        mysqldb.getConnection((error, connection) => {
             if(error) {
                 reject(error);
-            } else {
-                resolve(result);
+                return;
             }
+            connection.query(query, (error, result) => {
+                if(error) {
+                    mysqldbLastRowCount = -1;
+                    reject(error);
+                } else {
+                    if(updateMetaResults) {
+                        mysqldbLastRowCount = result.affectedRows;
+                        console.info(`last row count updated to ${mysqldbLastRowCount}`)
+                        mysqldbLastInsertedId = result.insertId;
+                    }
+                    resolve(result);
+                }
+                connection.release();
+            });
         });
      });
 }
@@ -115,35 +141,26 @@ async function establishOracleDBConnection() {
 
 
 async function establishMySQLConnection() {
-    let ret = MySQL.createConnection({
+    let ret = MySQL.createPool({
+        connectionLimit: properties.get<number>("MySQL.connection-limit", 10),
         host: properties.get<string>("MySQL.host"),
         port: properties.get<number>("MySQL.port"),
         user: properties.get<string>("MySQL.username"),
         password: properties.get<string>("MySQL.password")
     });
-    return new Promise<MySQL.Connection>((resolve, reject) => {
-        ret.connect(error => {
+    return new Promise<MySQL.Pool>((resolve, reject) => {
+        console.log(`Probando a crear una conexión con MySQL en ${properties.get("MySQL.host")}:${properties.get("MySQL.port")} como ${properties.get("MySQL.username")}.`);
+        // Trivial query to verify whether MySQL is resolving queries at all
+        ret.query("SELECT 1", (error, result) => {
             if(error) {
-                throw new Error(`No se ha podido establecer la conexión con MySQL en ${properties.get("MySQL.host")}:${properties.get("MySQL.port")} como ${properties.get("MySQL.username")}. Causa: ${error}`);
+                throw new Error(`No se ha podido crear una conexión con MySQL o no está resolviendo consultas. Causa: ${error}`);
             } else {
-                console.log(`Conexión establecida con MySQL en ${properties.get("MySQL.host")}:${properties.get("MySQL.port")} como ${properties.get("MySQL.username")}.`);
+                console.log("Conexión verificada con MySQL.");
+                mysqldb = ret;
                 resolve(ret);
             }
         });
-    }).then(con => new Promise<MySQL.Connection>((resolve, reject) => {
-            // Trivial query to verify whether MySQL is resolving queries at all
-            console.log("Probando a realizar una consulta trivial con MySQL...");
-            con.query("SELECT 1", (error, result) => {
-                if(error) {
-                    throw new Error(`MySQL no está resolviendo consultas. Causa: ${error}`);
-                } else {
-                    console.log("Consulta resuelta con MySQL.");
-                    mysqldb = con;
-                    resolve(con);
-                }
-            });
-        })
-    );
+    });
 }
 
 

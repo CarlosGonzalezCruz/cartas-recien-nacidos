@@ -49,7 +49,7 @@ export function* allMonthNames() {
 }
 
 
-let msgBoxIsDismissable = false;
+let msgBoxIsDismissable = true;
 
 
 export function isMsgBoxDismissable() {

@@ -1,10 +1,9 @@
 import fs from "fs";
 import process from "process";
-import { transcribeDateToISO, restartApplication } from "./utils.js";
+import { transcribeDateToISO } from "./utils.js";
 import * as properties from "./properties.js";
 
 
-const RESTART_DELAY_MS = 2000;
 let logFile :fs.WriteStream | null = null;
 let logEndListener = () => logFile?.end();
 
@@ -35,14 +34,6 @@ export function setup() {
 
     process.on("uncaughtException", (e) => {
         console.error(`Excepción no capturada: ${e.stack}`);
-        setTimeout(() => {
-            if(properties.get("Log.restart-on-uncaught-ex", false)) {
-                process.off("exit", logEndListener);
-                console.error("Se va a intentar reiniciar la aplicación...");
-                logFile?.end();
-                restartApplication();
-            }
-        }, RESTART_DELAY_MS);
     });
 
     process.on("exit", logEndListener);
