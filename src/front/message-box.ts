@@ -30,7 +30,9 @@ export function displayLoadingBox(message :string) {
     
     let waitFinish = new Promise<void>(r => promiseResolve = r); // Secondary promise that can be resolved externally
     let mainPromise :Promise<void> | null = null; // Main promise that summons the loading window
-     
+    
+    utils.setCursorLoadingState(true);
+    
     // The loading window will only appear if the program has been loading for at least some amount of time
     let mainPromiseTimeoutHandler = setTimeout(() => mainPromise = new Promise(r => {
         MSG_BOX.find("#modal-dialog-message").text(message);
@@ -54,12 +56,13 @@ export function displayLoadingBox(message :string) {
             SPINNER.addClass("d-flex");
             MSG_BOX.off("click"); // A loading window may not be dismissed by clicking away
             MODAL_FOOTER.hide(); // A loading window may not be dismissed by clicking "OK"
-            utils.setMsgBoxDismissable(true); // A loading window may not be dismissed by pressing Enter
+            utils.setMsgBoxDismissable(false); // A loading window may not be dismissed by pressing Enter
             linkPromise(); // The window is now shown, the secondary promise may proceed
         }, $(".modal:visible").length != 0 ? 500 : 0);
     }), 500);
     return {
         conclude: (then? :() => void) => { // Call to hide window and wait for it to finish before resuming the caller's task
+            utils.setCursorLoadingState(false);
             if(!!mainPromise) { // If mainPromise has been set, conclude took long enough to warrant a loading window. Remove it, wait for it to go, then resume
                 mainPromise.then(then);
             } else if(!!then) { // If mainPromise is null, conclude was called too fast and we can resume without showing any loading window

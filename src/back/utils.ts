@@ -91,15 +91,3 @@ export function enforceTwoDigits(value :number) {
         return value.toString();
     }
 }
-
-
-export function restartApplication() {
-    process.on("exit", () => {
-        child_process.spawn(process.argv.shift() + "", process.argv, {
-            cwd: process.cwd(),
-            detached: true,
-            stdio: "inherit"
-        });
-    });
-    process.exit();
-}

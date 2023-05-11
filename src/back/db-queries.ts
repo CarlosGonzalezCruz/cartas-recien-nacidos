@@ -60,7 +60,7 @@ export async function getNewbornsWithAddressOnly(): Promise<readonly Newborn[]> 
 
 export function getLastInsertedNewborn() {
     return db.performQueryMySQL(`
-        SELECT * FROM CRN.${db.profileTable("NACIMIENTOS")} WHERE Id = (SELECT LAST_INSERT_ID())
+        SELECT * FROM CRN.${db.profileTable("NACIMIENTOS")} WHERE Id = ${db.getMySQLLastInsertedId()}
     `) as Promise<Newborn[]>;
 }
 
@@ -160,9 +160,9 @@ export async function insertNewborn(loadName :string | null, ...newborns :Newbor
     let success = false;
     let amountOfRowsUpdated = 0;
     try {
-        let result = await db.performQueryMySQL(query);
+        await db.performQueryMySQL(query, true);
         success = true;
-        amountOfRowsUpdated = result.affectedRows;
+        amountOfRowsUpdated = db.getMySQLLastRowCount();
     } catch(e) {
         console.error("Error al guardar en la base de datos:");
         console.error(e);
@@ -223,7 +223,7 @@ export async function deleteLoad(loadName :string) {
     await db.performQueryMySQL(
         `
             DELETE FROM CRN.${db.profileTable("NACIMIENTOS")} WHERE NombreCarga = "${loadName}";
-        `
+        `, true
     );
     console.log(`Eliminadas ${await lastOperationAmountOfRowsUpdated()} filas`);
 }
@@ -234,9 +234,9 @@ export async function deleteNewbornsWithIds(...id :(string | number)[]) {
         return;
     }
     console.log(`Solicitada la eliminación de ${id.length} registros`);
-    db.performQueryMySQL(`
+    await db.performQueryMySQL(`
         DELETE FROM CRN.${db.profileTable("NACIMIENTOS")} WHERE Id IN (${id.join(",")})
-    `);
+    `, true);
     console.log(`Eliminadas ${await lastOperationAmountOfRowsUpdated()} filas`);
 }
 
@@ -245,15 +245,11 @@ export async function lastOperationAmountOfRowsUpdated(preferCached = false) {
     if(preferCached && cachedAmountOfRowsUpdated != null) {
         return cachedAmountOfRowsUpdated;
     }
-    let query = await db.performQueryMySQL(
-        `
-            SELECT ROW_COUNT() AS COUNT;
-        `
-    ) as {COUNT :number}[];
-    if(query[0].COUNT != -1) {
-        cachedAmountOfRowsUpdated = query[0].COUNT;
+    let query = db.getMySQLLastRowCount();
+    if(query != -1) {
+        cachedAmountOfRowsUpdated = query;
     }
-    return query[0].COUNT;
+    return query;
 }
 
 

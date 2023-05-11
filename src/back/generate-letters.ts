@@ -36,9 +36,10 @@ export async function generateLettersForNewborns(...newborns :Newborn[]) {
             generateEnvelope(document, newborn);
             firstPage = false;
         }
-        if(skipped > 0) {
-            console.log(`Para la carga seleccionada, ${skipped} registros no tienen datos de dirección, código postal, o municipio. No se ha generado sobre para ellos.`);
-        }
+        console.log(
+            `Se han generado sobres para ${newborns.length - skipped} registros.`
+            + (skipped > 0 ? ` Para la carga seleccionada, ${skipped} registros no tienen datos de dirección, código postal, o municipio. No se ha generado sobre para ellos.` : "")
+        );
         document.end();
     });
 }
@@ -66,15 +67,24 @@ export async function generateListingForNewborns(...newborns :Newborn[]) {
             .filter(n => n.ViviendaDireccion != null && n.ViviendaCodigoPostal != null)
             .map(n => [`FAMILIARES DE ${n.Nacido_Nombre} ${n.Nacido_Apellido1} ${n.Nacido_Apellido2}`, `${n.ViviendaDireccion}`, `${n.ViviendaCodigoPostal}`]);
         
+        for(let i = 0; i < rows.length; i++) {
+            rows[i].unshift(`${(i + 1)}.`);
+        }
+
         document.font("Helvetica-Bold").fontSize(24)
             .text(`Listado Nacidos ${commonLoad ? "Carga " + commonLoad : "varias cargas"}`, {align: "center", underline: true});
         document.table({
-            headers: [{label: "Nombre", width: 260}, {label: "Dirección", width: 260}, {label: "CP", width: 50}],
+            headers: [
+                {label: "", width: 20, columnColor: "#BEBEBE", columnOpacity: 0.1, align: "right"},
+                {label: "Nombre", width: 260}, {label: "Dirección", width: 260}, {label: "CP", width: 50}
+            ],
             rows: rows
-        })
-        if(newborns.length > rows.length) {
-            console.log(`Para la carga seleccionada, ${newborns.length - rows.length} registros no tienen datos de dirección o código postal. No se han incluido en el listado.`);
-        }
+        });
+        let skipped = newborns.length - rows.length;
+        console.log(
+            `Se ha generado un listado para ${rows.length} registros.`
+            + (skipped > 0 ? ` Para la carga seleccionada, ${skipped} registros no tienen datos de dirección, código postal, o municipio. No se ha generado sobre para ellos.` : "")
+        );
         document.font("Helvetica-Bold").fontSize(16).text(`Total de entradas: ${rows.length}`, {align: "center"});
         document.end();
     });
