@@ -1,5 +1,7 @@
 # Cartas recién nacidos
 
+> Esta rama contiene una versión modificada del programa que, en lugar de conectarse las bases de datos del ayuntamiento, las simula utilizando datos generados aleatoriamente. De esta manera, se puede descargar, ejecutar y probar libremente la aplicación en cualquier dispositivo compatible. El perfil que se recomienda usar está en `properties/demo.ini`.
+
 Este programa permite a usuarios del Ayuntamiento conectarse al servidor para actualizar la base de datos de recién nacidos, según los datos recibidos por el INE, así como generar sobres y un listado para enviar las cartas de rigor.
 
 Para utilizarse, esta aplicación requiere un servidor donde ha de estar en continuo funcionamiento. Se recomienda configurar un servicio que se inicie automáticamente al arranque. Los usuarios se conectarán a través de un navegador web al puerto expuesto por la aplicación.
