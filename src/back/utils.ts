@@ -91,3 +91,14 @@ export function enforceTwoDigits(value :number) {
         return value.toString();
     }
 }
+
+
+export function pickRandom<T>(array :T[]) {
+    let randomIndex = randomNumber(0, array.length);
+    return array[randomIndex];
+}
+
+
+export function randomNumber(min :number, max :number) {
+    return Math.floor(Math.random() * (max - min)) + min;
+}

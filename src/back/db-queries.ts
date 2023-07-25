@@ -31,9 +31,9 @@ export function closeAll() {
 
 export async function getNewbornsFromLastLoad(): Promise<readonly Newborn[]> {
     let result = await db.performQueryMySQL(`
-        SELECT * FROM CRN.${db.profileTable("NACIMIENTOS")} WHERE NombreCarga = 
-        (SELECT MAX(NombreCarga) FROM CRN.${db.profileTable("NACIMIENTOS")} WHERE NombreCarga IS NOT NULL
-        AND FechaCarga = (SELECT MAX(FechaCarga) FROM CRN.${db.profileTable("NACIMIENTOS")} WHERE NombreCarga IS NOT NULL))
+        SELECT * FROM ${db.profileTable("NACIMIENTOS")} WHERE NombreCarga = 
+        (SELECT MAX(NombreCarga) FROM ${db.profileTable("NACIMIENTOS")} WHERE NombreCarga IS NOT NULL
+        AND FechaCarga = (SELECT MAX(FechaCarga) FROM ${db.profileTable("NACIMIENTOS")} WHERE NombreCarga IS NOT NULL))
         ORDER BY ${SORT_CRITERIA}
     `) as Newborn[];
     lastFilterQueryResult = result;
@@ -42,7 +42,7 @@ export async function getNewbornsFromLastLoad(): Promise<readonly Newborn[]> {
 
 export async function getAllNewborns(): Promise<readonly Newborn[]> {
     let result = await db.performQueryMySQL(`
-        SELECT * FROM CRN.${db.profileTable("NACIMIENTOS")}
+        SELECT * FROM ${db.profileTable("NACIMIENTOS")}
         ORDER BY ${SORT_CRITERIA}
     `) as Newborn[];
     lastFilterQueryResult = result;
@@ -51,7 +51,7 @@ export async function getAllNewborns(): Promise<readonly Newborn[]> {
 
 export async function getNewbornsWithAddressOnly(): Promise<readonly Newborn[]> {
     let result = await db.performQueryMySQL(`
-        SELECT * FROM CRN.${db.profileTable("NACIMIENTOS")} WHERE ViviendaDireccion Is Not Null
+        SELECT * FROM ${db.profileTable("NACIMIENTOS")} WHERE ViviendaDireccion Is Not Null
         ORDER BY ${SORT_CRITERIA}
     `) as Newborn[];
     lastFilterQueryResult = result;
@@ -60,7 +60,7 @@ export async function getNewbornsWithAddressOnly(): Promise<readonly Newborn[]> 
 
 export function getLastInsertedNewborn() {
     return db.performQueryMySQL(`
-        SELECT * FROM CRN.${db.profileTable("NACIMIENTOS")} WHERE Id = ${db.getMySQLLastInsertedId()}
+        SELECT * FROM ${db.profileTable("NACIMIENTOS")} WHERE Id = ${db.getMySQLLastInsertedId()}
     `) as Promise<Newborn[]>;
 }
 
@@ -69,7 +69,7 @@ export function getNewbornsWithIds(...id :(string | number)[]) {
         return new Promise<Newborn[]>(r => r([]));
     }
     return db.performQueryMySQL(`
-        SELECT * FROM CRN.${db.profileTable("NACIMIENTOS")} WHERE Id IN (${id.join(",")})
+        SELECT * FROM ${db.profileTable("NACIMIENTOS")} WHERE Id IN (${id.join(",")})
         ORDER BY ${SORT_CRITERIA}
     `) as Promise<Newborn[]>;
 }
@@ -93,7 +93,7 @@ export async function getNewbornsWithCustomFilter(...params :[string, string][])
     let condition = conditions.join(" AND ");
     if(!!condition) {
         let result = await db.performQueryMySQL(`
-            SELECT * FROM CRN.${db.profileTable("NACIMIENTOS")} WHERE ${condition}
+            SELECT * FROM ${db.profileTable("NACIMIENTOS")} WHERE ${condition}
             ORDER BY ${SORT_CRITERIA}
         `) as Newborn[];
         lastFilterQueryResult = result;
@@ -145,7 +145,7 @@ export async function insertNewborn(loadName :string | null, ...newborns :Newbor
         };
     }
     let query = `
-        INSERT INTO CRN.${db.profileTable("NACIMIENTOS")}(${Object.keys(newborns[0]).join(",")}) VALUES
+        INSERT INTO ${db.profileTable("NACIMIENTOS")}(${Object.keys(newborns[0]).join(",")}) VALUES
     `;
     let query_rows :string[] = [];
     for(let entry of newborns) {
@@ -188,7 +188,7 @@ export async function insertNewbornAdHoc(...newborns :Newborn[]) {
 export async function getDistinctLoads() {
     return db.performQueryMySQL(
         `
-            SELECT DISTINCT(NombreCarga) FROM CRN.${db.profileTable("NACIMIENTOS")} WHERE NombreCarga IS NOT NULL;
+            SELECT DISTINCT(NombreCarga) FROM ${db.profileTable("NACIMIENTOS")} WHERE NombreCarga IS NOT NULL;
         `
     );
 }
@@ -197,8 +197,8 @@ export async function getDistinctLoads() {
 export async function getLatestLoad() {
     let query = await db.performQueryMySQL(
         `
-            SELECT NombreCarga, FechaCarga FROM CRN.${db.profileTable("NACIMIENTOS")} WHERE NombreCarga IS NOT NULL
-            AND FechaCarga = (SELECT MAX(FechaCarga) FROM CRN.${db.profileTable("NACIMIENTOS")} WHERE NombreCarga IS NOT NULL);
+            SELECT NombreCarga, FechaCarga FROM ${db.profileTable("NACIMIENTOS")} WHERE NombreCarga IS NOT NULL
+            AND FechaCarga = (SELECT MAX(FechaCarga) FROM ${db.profileTable("NACIMIENTOS")} WHERE NombreCarga IS NOT NULL);
         `
     );
     if(query.length == 0) {
@@ -211,7 +211,7 @@ export async function getLatestLoad() {
 export async function isLoadPresent(loadName :string) {
     let rows = await db.performQueryMySQL(
         `
-            SELECT COUNT(1) AS COUNT FROM CRN.${db.profileTable("NACIMIENTOS")} WHERE NombreCarga = "${loadName}";
+            SELECT COUNT(1) AS COUNT FROM ${db.profileTable("NACIMIENTOS")} WHERE NombreCarga = "${loadName}";
         `
     );
     return rows[0]["COUNT"] != 0;
@@ -222,7 +222,7 @@ export async function deleteLoad(loadName :string) {
     console.log(`Solicitada la eliminación de la carga ${loadName}`);
     await db.performQueryMySQL(
         `
-            DELETE FROM CRN.${db.profileTable("NACIMIENTOS")} WHERE NombreCarga = "${loadName}";
+            DELETE FROM ${db.profileTable("NACIMIENTOS")} WHERE NombreCarga = "${loadName}";
         `, true
     );
     console.log(`Eliminadas ${await lastOperationAmountOfRowsUpdated()} filas`);
@@ -235,7 +235,7 @@ export async function deleteNewbornsWithIds(...id :(string | number)[]) {
     }
     console.log(`Solicitada la eliminación de ${id.length} registros`);
     await db.performQueryMySQL(`
-        DELETE FROM CRN.${db.profileTable("NACIMIENTOS")} WHERE Id IN (${id.join(",")})
+        DELETE FROM ${db.profileTable("NACIMIENTOS")} WHERE Id IN (${id.join(",")})
     `, true);
     console.log(`Eliminadas ${await lastOperationAmountOfRowsUpdated()} filas`);
 }
@@ -257,17 +257,17 @@ export async function getAddressByIdDocument(identifier :string, validator :stri
     let query = await db.performQueryOracleDB(
         `
         SELECT DIRTOTDIR, DIRCODPOS, DIRNOMMUN
-        FROM REPOS.PMH_HABITANTE H
-        INNER JOIN REPOS.PMH_SIT_HABITANTE SIT ON SIT.HABITANTE_ID = H.DBOID
-        INNER JOIN REPOS.PMH_VIVIENDA V ON SIT.VIVIENDA_ID = V.DBOID
-        INNER JOIN REPOS.SP_BDC_DIRECC D ON V.ADDRESS_ID = D.DIRDBOIDE
-        WHERE H.DOC_IDENTIFICADOR = '${identifier}' ${validator != null ? "AND H.DOC_LETRA = '" + validator + "'" : ""}
-        AND SIT.ALTA_FECHA = (
-            SELECT MAX(SIT.ALTA_FECHA)
-	        FROM REPOS.PMH_SIT_HABITANTE SIT
-	        INNER JOIN REPOS.PMH_HABITANTE H ON H.DBOID = SIT.HABITANTE_ID
-	        WHERE H.DOC_IDENTIFICADOR = '${identifier}' ${validator != null ? "AND H.DOC_LETRA = '" + validator + "'" : ""}
-        )`
-    ) as {rows :string[][]};
-    return query.rows.length > 0 ? query.rows[0] : null;
+        FROM DIRECCIONES
+        WHERE DNI="${identifier}"`
+    ) as {DIRTOTDIR :string, DIRCODPOS :string, DIRNOMMUN :string}[];
+    return query.length > 0 ? [query[0].DIRTOTDIR, query[0].DIRCODPOS, query[0].DIRNOMMUN] : null;
+}
+
+
+export async function addAddressByIdDocument(identifier :string, address :string, postalCode :number, municipality :string) {
+    let query = await db.performQueryOracleDB(
+        `
+        INSERT INTO DIRECCIONES(DNI, DIRTOTDIR, DIRCODPOS, DIRNOMMUN)
+        VALUES ('${identifier}', '${address}', '${postalCode}', '${municipality}')`
+    )
 }

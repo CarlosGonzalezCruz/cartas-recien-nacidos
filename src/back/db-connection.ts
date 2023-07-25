@@ -1,17 +1,24 @@
-import OracleDB from "oracledb";
-import MySQL from "mysql";
+import fs from "fs";
+import sqlite3 from "sqlite3";
 import * as properties from "./properties.js";
 
 
-let oracledb :OracleDB.Connection | null;
+const DB_PATHS = {
+    oracledb: "db/oracledb",
+    mysql: "db/mysqldb"
+} as const;
+
+
+let oracledb : sqlite3.Database | null;
 let oracledbCloseTimeout :NodeJS.Timeout | null;
-let mysqldb :MySQL.Pool;
+let mysqldb :sqlite3.Database;
 
 let mysqldbLastRowCount = 0;
 let mysqldbLastInsertedId = -1;
 
 
 export async function openMySQL() {
+    ensureDirectoryExists(DB_PATHS.mysql);
     await establishMySQLConnection();
     await initTables();
 }
@@ -19,6 +26,7 @@ export async function openMySQL() {
 
 export async function openOracleDB() {
     let success :boolean;
+    ensureDirectoryExists(DB_PATHS.oracledb);
     try {
         if(!!oracledb) {
             closeOracleDB();
@@ -40,7 +48,7 @@ export async function closeOracleDB() {
     if(!oracledb) {
         return;
     }
-    await oracledb.close();
+    oracledb.close();
     oracledb = null;
     console.log("Conexión terminada con Oracle DB.");
     if(!!oracledbCloseTimeout) {
@@ -75,104 +83,89 @@ export function getMySQLLastInsertedId() {
 
 
 export async function performQueryMySQL(query :string, updateMetaResults = false) :Promise<any> {
-     return new Promise((resolve, reject) => {
-        mysqldb.getConnection((error, connection) => {
-            if(error) {
-                reject(error);
-                return;
-            }
-            connection.query(query, (error, result) => {
-                if(error) {
-                    mysqldbLastRowCount = -1;
-                    reject(error);
+    return new Promise((resolve, reject) => {
+        mysqldb.all(query, (err, rows) => {
+            if (err) {
+                reject(err);
+            } else {
+                if (updateMetaResults) {
+                    mysqldb.get(`SELECT MAX(Id) AS maxId, CHANGES() AS changes FROM ${profileTable("NACIMIENTOS")}`, (err, row :any) => {
+                        if (err) {
+                            reject(err);
+                        } else {
+                          mysqldbLastRowCount = row.changes;
+                          mysqldbLastInsertedId = row.maxId;
+                          resolve(rows);
+                        }
+                      });
                 } else {
-                    if(updateMetaResults) {
-                        mysqldbLastRowCount = result.affectedRows;
-                        console.info(`last row count updated to ${mysqldbLastRowCount}`)
-                        mysqldbLastInsertedId = result.insertId;
-                    }
-                    resolve(result);
+                    resolve(rows);
                 }
-                connection.release();
-            });
+            }
         });
-     });
+    });
 }
 
 
 export async function performQueryOracleDB(query :string) {
     if(!oracledb) {
-        console.error("No hay conexión con Oracle DB");
-        return null;
+        await openOracleDB();
     }
     if(!!oracledbCloseTimeout) {
         clearTimeout(oracledbCloseTimeout);
         oracledbCloseTimeout = setTimeout(closeOracleDB, properties.get("Oracle.timeout-ms", 0));
     }
-    return oracledb.execute(query);
+    return new Promise(resolve => {
+        oracledb!.all(query, (_, rows) => {
+            resolve(rows);
+        });
+    });
 }
 
 
 async function establishOracleDBConnection() {
-    let ret :OracleDB.Connection;
-    try {
-        ret = await OracleDB.getConnection({
-            connectionString: `(DESCRIPTION=(ADDRESS_LIST=
-                    (ADDRESS=(PROTOCOL=${properties.get("Oracle.protocol", "TCP")})(HOST=${properties.get("Oracle.host")})(PORT=${properties.get("Oracle.port")})))
-                    (CONNECT_DATA=${properties.get("Oracle.dedicated-server", false) ? "(SERVER=DEDICATED)" : ""}(SERVICE_NAME=ORCL)))`,
-            user: properties.get<string>("Oracle.username"),
-            password: properties.get<string>("Oracle.password")
-        });
-        console.log(`Conexión establecida con Oracle DB en ${properties.get("Oracle.host")}:${properties.get("Oracle.port")} como ${properties.get("Oracle.username")}.`);
-    } catch(e) {
-        throw new Error(`No se ha podido establecer la conexión con Oracle DB en ${properties.get("Oracle.host")}:${properties.get("Oracle.port")} como ${properties.get("Oracle.username")}. Causa: ${e}`);
-    }
-    try {
-        // Trivial query to verify whether Oracle DB is resolving queries at all
-        console.log("Probando a realizar una consulta trivial con Oracle DB...");
-        await ret.execute("SELECT COUNT(1) FROM ALL_TABLES");
-        console.log("Consulta resuelta con Oracle DB.");
-        oracledb = ret;
-    } catch(e) {
-        throw new Error(`Oracle DB no está resolviendo consultas. Causa: ${e}`);
-    }
-    return ret;
-}
-
-
-async function establishMySQLConnection() {
-    let ret = MySQL.createPool({
-        connectionLimit: properties.get<number>("MySQL.connection-limit", 10),
-        host: properties.get<string>("MySQL.host"),
-        port: properties.get<number>("MySQL.port"),
-        user: properties.get<string>("MySQL.username"),
-        password: properties.get<string>("MySQL.password")
-    });
-    return new Promise<MySQL.Pool>((resolve, reject) => {
-        console.log(`Probando a crear una conexión con MySQL en ${properties.get("MySQL.host")}:${properties.get("MySQL.port")} como ${properties.get("MySQL.username")}.`);
-        // Trivial query to verify whether MySQL is resolving queries at all
-        ret.query("SELECT 1", (error, result) => {
-            if(error) {
-                throw new Error(`No se ha podido crear una conexión con MySQL o no está resolviendo consultas. Causa: ${error}`);
+    return new Promise((resolve, reject) => {
+        oracledb = new sqlite3.Database(DB_PATHS.oracledb, err => {
+            if(err) {
+                reject(err);
             } else {
-                console.log("Conexión verificada con MySQL.");
-                mysqldb = ret;
-                resolve(ret);
+                resolve(oracledb);
             }
         });
     });
 }
 
 
+async function establishMySQLConnection() {
+    return new Promise((resolve, reject) => {
+        mysqldb = new sqlite3.Database(DB_PATHS.mysql, err => {
+            if(err) {
+                reject(err);
+            } else {
+                resolve(mysqldb);
+            }
+        });
+    });
+}
+
+
+function ensureDirectoryExists(path: string) {
+    const dir = path.substring(0, path.lastIndexOf('/'));
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+  }
+
+
 async function initTables() {
     let newbornsTable = profileTable("NACIMIENTOS");
-    let existingTables = await performQueryMySQL(`SHOW TABLES FROM CRN LIKE '${newbornsTable}'`) as string[];
+    let existingTables = await performQueryMySQL(`SELECT name FROM sqlite_master WHERE type='table' AND name='${newbornsTable}'`) as string[];
     if(existingTables.length == 0) {
         console.log(`Se van a crear las tablas necesarias en MySQL.`);
         try {
             await performQueryMySQL(`
-                CREATE TABLE CRN.${newbornsTable} (
-                    Id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                CREATE TABLE ${newbornsTable} (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
                     Nacido_Fecha DATE,
                     Nacido_Nombre TEXT,
                     Nacido_Apellido1 TEXT,
@@ -194,16 +187,31 @@ async function initTables() {
                     ViviendaDireccion TEXT,
                     ViviendaCodigoPostal VARCHAR(5),
                     ViviendaNombreMunicipio TEXT,
-                    ObservacionesCruce TEXT,
-                    INDEX NombreCarga_idx(NombreCarga),
-                    INDEX ViviendaDireccion_idx(ViviendaDireccion(6)),
-                    INDEX ViviendaCodigoPostal_idx(ViviendaCodigoPostal)
+                    ObservacionesCruce TEXT
                 );
             `);
             console.log(`Tabla ${newbornsTable} creada en MySQL.`);
         } catch(e) {
             throw new Error(`No se ha podido crear la tabla ${newbornsTable} en MySQL. Causa: ${e}.`);
         }
-
+    }
+    
+    openOracleDB();
+    let existingAddressTables = await performQueryOracleDB(`SELECT name FROM sqlite_master WHERE type='table' AND name='DIRECCIONES'`) as string[];
+    if(existingAddressTables.length == 0) {
+        console.log(`Para la versión de muestra, se va a crear una tabla de direcciones de viviendas en OracleDB. En la versión de producción, esta base de datos ya existe.`);
+        try {
+            await performQueryOracleDB(`
+                CREATE TABLE DIRECCIONES (
+                    DNI TEXT,
+                    DIRTOTDIR TEXT,
+                    DIRCODPOS TEXT,
+                    DIRNOMMUN TEXT
+                );
+            `);
+            console.log(`Tabla DIRECCIONES creada en OracleDB.`);
+        } catch(e) {
+            throw new Error(`No se ha podido crear la tabla DIRECCIONES en OracleDB. Causa: ${e}.`);
+        }
     }
 }

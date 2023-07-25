@@ -144,26 +144,12 @@ function* readFileEntries(file :UploadedFile) {
                 Padre_DNI_Extranjero: row.substring(176, 177).trim(),
                 Padre_DNI: row.substring(177, 185).trim(),
                 Padre_DNI_Letra: row.substring(185, 186).trim(),
-                /* Padre_ViviendaDireccion: {
-                    TipoVia: row.substring(194, 199).trim(),
-                    NombreVia: row.substring(199, 249).trim(),
-                    Numero: row.substring(249, 254).trim(),
-                    Linea2: row.substring(254, 263).trim(),
-                },
-                Padre_ViviendaCodigoPostal: row.substring(263, 268).trim(), */
                 Madre_Nombre: row.substring(268, 288).trim(),
                 Madre_Apellido1: row.substring(288, 313).trim(),
                 Madre_Apellido2: row.substring(313, 338).trim(),
                 Madre_DNI_Extranjero: row.substring(339, 340).trim(),
                 Madre_DNI: row.substring(340, 348).trim(),
                 Madre_DNI_Letra: row.substring(348, 349).trim(),
-                /* Madre_ViviendaDireccion: {
-                    TipoVia: row.substring(357, 362).trim(),
-                    NombreVia: row.substring(362, 412).trim(),
-                    Numero: row.substring(412, 417).trim(),
-                    Linea2: row.substring(417, 426).trim(),
-                },
-                Madre_ViviendaCodigoPostal: row.substring(426, 431).trim() */
             }
         }
     } catch(e) {
@@ -198,8 +184,8 @@ async function pickAddress(db_entry :any, newborn :Newborn) {
                 newborn.ViviendaNombreMunicipio = foundAddress[2];
                 observaciones.push(`Dirección cruzada por ${p}.`);
                 found = true;
+                break;
             }
-            break;
         }
     }
     if(!found) {

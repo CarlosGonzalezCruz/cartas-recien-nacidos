@@ -4,6 +4,7 @@ import formidable from "formidable";
 import * as db from "./db-queries.js";
 import * as newborns from "./newborns-load-creation.js";
 import * as properties from "./properties.js";
+import { generateZipWithRandomLoads } from "../showcase/generate-data.js";
 import { NewbornAdHoc, getNewbornDataFromAdHoc } from "./utils.js";
 import { UploadedFile } from "./newborns-load-creation.js";
 import { generateLettersForNewborns, generateListingForNewborns } from "./generate-letters.js";
@@ -148,4 +149,14 @@ APP.delete('/newborns-data/by-id', async (request, result) => {
     result.send({
         count: await db.lastOperationAmountOfRowsUpdated(true)
     });
+});
+
+APP.get("/sample-ine-loads", async (request, result) => {
+    try {
+        let zip = await generateZipWithRandomLoads();
+        result.attachment("Cargas de muestra.zip");
+        zip.pipe(result);
+    } catch(e) {
+        result.send(500);
+    }
 });
