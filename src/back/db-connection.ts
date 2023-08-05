@@ -203,7 +203,7 @@ async function initTables() {
         try {
             await performQueryOracleDB(`
                 CREATE TABLE DIRECCIONES (
-                    DNI TEXT,
+                    DNI TEXT PRIMARY KEY,
                     DIRTOTDIR TEXT,
                     DIRCODPOS TEXT,
                     DIRNOMMUN TEXT

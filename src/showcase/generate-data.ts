@@ -16,11 +16,14 @@ async function generateRandomNewborn() {
     let fatherDNI = getRandomDNI();
     let motherLastName = utils.pickRandom(LAST_NAMES).toUpperCase();
     let motherDNI = getRandomDNI();
+    let address;
     if(Math.random() >= 0.1) {
-        await addRandomAddressToDatabase(utils.pickRandom([fatherDNI, motherDNI]));
+        address = generateRandomAddress(utils.pickRandom([fatherDNI, motherDNI]));
+    } else {
+        address = null;
     }
-
-    let ret = ""
+    
+    let newborn = ""
     .padEnd(26).concat(formatDate(getRandomDate()))
     .padEnd(34).concat(getRandomName().toUpperCase())
     .padEnd(54).concat(fatherLastName)
@@ -38,18 +41,25 @@ async function generateRandomNewborn() {
     .padEnd(340).concat(motherDNI.number.toString())
     .padEnd(348).concat(motherDNI.letter)
     .padEnd(431);
-
-    return ret;
+    
+    return { newborn, address };
 }
 
 
 async function generateRandomLoadDocumentContent() {
-    let ret = "";
+    let promises :Promise<string>[] = [];
     let newbornAmount = utils.randomNumber(15, 45);
+    let newborns :string[] = [];
+    let addresses :{identifier :string, address :string, postalCode :number, municipality :string}[] = [];
     for(let i = 0; i < newbornAmount; i++) {
-        ret += await generateRandomNewborn() + '\n';
+        let {newborn, address} = await generateRandomNewborn();
+        newborns.push(newborn);
+        if(address != null) {
+            addresses.push(address);
+        }
     }
-    return ret;
+    await db.addAddressesByIdDocument(addresses);
+    return newborns.join('\n');
 }
 
 
@@ -65,6 +75,10 @@ export async function generateZipWithRandomLoads() :Promise<Archiver> {
         });
 
         for(let i = 1; i <= 12; i++) {
+            if(typeof process.stdout.cursorTo == "function") {
+                process.stdout.write(`Generando cargas de muestra... ${(i).toString().padStart(2, ' ')}/12`);
+                process.stdout.cursorTo(0);
+            }
             let content = Buffer.from(await generateRandomLoadDocumentContent(), properties.get("Application.load-encoding", 'utf-8'));
             archive.append(content, {name: `Muestra.${i}99`});
         }
@@ -75,11 +89,16 @@ export async function generateZipWithRandomLoads() :Promise<Archiver> {
 }
 
 
-async function addRandomAddressToDatabase(dni :{foreign :string, number :string}) {
+function generateRandomAddress(dni :{foreign :string, number :string}) {
     let identifier = !dni.foreign ? dni.number.padStart(9, '0') : dni.foreign + dni.number;
     let address = utils.pickRandom(STREET_NAMES).toUpperCase() + ' ' + utils.randomNumber(1, 151);
     let postalCode = 28800 + utils.randomNumber(1, 6);
-    await db.addAddressByIdDocument(identifier, address, postalCode, "ALCALA DE HENARES");
+    return {
+        identifier,
+        address,
+        postalCode,
+        municipality: "ALCALA DE HENARES"
+    };
 }
 
 

@@ -264,10 +264,11 @@ export async function getAddressByIdDocument(identifier :string, validator :stri
 }
 
 
-export async function addAddressByIdDocument(identifier :string, address :string, postalCode :number, municipality :string) {
-    let query = await db.performQueryOracleDB(
+export async function addAddressesByIdDocument(data :{identifier :string, address :string, postalCode :number, municipality :string}[]) {
+    let values = data.map(d => `('${d.identifier}', '${d.address}', '${d.postalCode}', '${d.municipality}')`).join(',\n');
+    await db.performQueryOracleDB(
         `
-        INSERT INTO DIRECCIONES(DNI, DIRTOTDIR, DIRCODPOS, DIRNOMMUN)
-        VALUES ('${identifier}', '${address}', '${postalCode}', '${municipality}')`
-    )
+        INSERT OR IGNORE INTO DIRECCIONES(DNI, DIRTOTDIR, DIRCODPOS, DIRNOMMUN)
+        VALUES ${values}`
+    );
 }
